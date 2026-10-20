@@ -1,5 +1,4 @@
 Flask>=3.0.0
-oracledb>=2.0.0
 scikit-learn>=1.4.0
 pandas>=2.0.0
 numpy>=1.26.0
@@ -9,4 +8,5 @@ matplotlib>=3.8.0
 python-dotenv>=1.0.0
 Werkzeug>=3.0.0
 pymongo>=4.6.0
-gunicorn
+dnspython>=2.6.0
+gunicorn>=21.2.0
