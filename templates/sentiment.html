@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}AI Sentiment Analytics — {{ movie.title }}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem;">
+  
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span style="font-size: 0.8rem; background: rgba(139,92,246,0.2); color: var(--accent-purple); padding: 0.25rem 0.65rem; border-radius: 9999px; font-weight: 700; text-transform: uppercase;">Natural Language Processing &bull; Scikit-Learn</span>
+      <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin-top: 0.4rem;">{{ movie.title }} — Sentiment Analytics</h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">Automated machine learning opinion mining across all viewer submissions</p>
+    </div>
+    <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-secondary">&larr; Back to Movie</a>
+  </div>
+
+  <!-- Sentiment Metrics Overview -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.5rem;">
+      <span style="font-size: 0.85rem; color: var(--text-muted);">Total Analyzed Reviews</span>
+      <div style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin-top: 0.25rem;">{{ total_reviews }}</div>
+    </div>
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.5rem;">
+      <span style="font-size: 0.85rem; color: var(--success);">Positive Sentiment</span>
+      <div style="font-size: 2.2rem; font-weight: 800; color: var(--success); margin-top: 0.25rem;">{{ positive_pct }}%</div>
+      <span style="font-size: 0.8rem; color: var(--text-muted);">{{ sentiment_counts.Positive }} reviews</span>
+    </div>
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.5rem;">
+      <span style="font-size: 0.85rem; color: var(--info);">Neutral Sentiment</span>
+      <div style="font-size: 2.2rem; font-weight: 800; color: var(--info); margin-top: 0.25rem;">{{ neutral_pct }}%</div>
+      <span style="font-size: 0.8rem; color: var(--text-muted);">{{ sentiment_counts.Neutral }} reviews</span>
+    </div>
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.5rem;">
+      <span style="font-size: 0.85rem; color: var(--danger);">Negative Sentiment</span>
+      <div style="font-size: 2.2rem; font-weight: 800; color: var(--danger); margin-top: 0.25rem;">{{ negative_pct }}%</div>
+      <span style="font-size: 0.8rem; color: var(--text-muted);">{{ sentiment_counts.Negative }} reviews</span>
+    </div>
+  </div>
+
+  <!-- Dynamic Word Cloud Visualization -->
+  <div class="wordcloud-card" style="background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); padding: 2rem; margin-bottom: 2.5rem; text-align: center;">
+    <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">☁️ Generated Audience Word Cloud</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Key keywords and sentiment tokens extracted dynamically from audience feedback</p>
+    {% if wordcloud_b64 %}
+      <img src="{% if wordcloud_b64.startswith('data:') %}{{ wordcloud_b64 }}{% else %}data:image/png;base64,{{ wordcloud_b64 }}{% endif %}" alt="Word Cloud — {{ movie.title }}" style="max-width: 100%; height: auto; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-md);">
+    {% else %}
+      <div style="padding: 2.5rem 1rem; color: var(--text-muted); font-size: 0.95rem; background: var(--bg-main); border-radius: var(--radius-md); border: 1px dashed var(--border); max-width: 600px; margin: 0 auto;">
+        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">💬</span>
+        <p style="margin: 0; font-weight: 500; color: var(--text-secondary);">Not enough review text to generate a word cloud yet.</p>
+        <span style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-top: 0.35rem;">Once more viewers submit feedback, common sentiment keywords will appear here automatically.</span>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Detailed Reviews Feed -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem;">
+    <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.25rem;">Individual Classified Reviews</h2>
+    
+    {% if reviews %}
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+      {% for r in reviews %}
+      <div style="background: var(--bg-main); border-radius: var(--radius-md); border: 1px solid var(--border); padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <strong style="color: var(--text-primary);">{{ r.reviewer_name }}</strong>
+            <span style="color: var(--primary); font-size: 0.9rem; font-weight: 700;">★ {{ r.rating }}/5</span>
+          </div>
+          <span style="font-size: 0.8rem; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: 700;
+            {% if r.sentiment_label == 'Positive' %}background: var(--success-bg); color: var(--success);
+            {% elif r.sentiment_label == 'Negative' %}background: var(--danger-bg); color: var(--danger);
+            {% else %}background: var(--info-bg); color: var(--info);{% endif %}">
+            {{ r.sentiment_label }} ({{ r.confidence_score|round(1) }}%)
+          </span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">{{ r.review_text }}</p>
+        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.5rem;">Submitted on {{ r.review_date_str }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted);">No reviews currently available to analyze.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

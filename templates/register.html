@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Register — Smart Cinema Ticket Hub{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 3rem auto; padding: 2.5rem; background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); box-shadow: var(--shadow-lg);">
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">Create Account</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Join CinemaHub to book movies and post AI-analyzed reviews</p>
+  </div>
+
+  <form method="POST" action="{{ url_for('auth.register') }}" style="display: flex; flex-direction: column; gap: 1.1rem;">
+    <div>
+      <label for="name" style="display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem;">Full Name</label>
+      <input type="text" id="name" name="name" value="{{ name or '' }}" required placeholder="e.g. Rani Priya" style="width: 100%; padding: 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); font-size: 0.95rem;">
+    </div>
+
+    <div>
+      <label for="email" style="display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem;">Email Address</label>
+      <input type="email" id="email" name="email" value="{{ email or '' }}" required placeholder="your.email@example.com" style="width: 100%; padding: 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); font-size: 0.95rem;">
+    </div>
+
+    <div>
+      <label for="phone" style="display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem;">Phone Number</label>
+      <input type="tel" id="phone" name="phone" value="{{ phone or '' }}" required placeholder="10-digit mobile number" style="width: 100%; padding: 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); font-size: 0.95rem;">
+    </div>
+
+    <div>
+      <label for="password" style="display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem;">Password</label>
+      <input type="password" id="password" name="password" required placeholder="Minimum 6 characters" style="width: 100%; padding: 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); font-size: 0.95rem;">
+    </div>
+
+    <div>
+      <label for="confirm_password" style="display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem;">Confirm Password</label>
+      <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-enter password" style="width: 100%; padding: 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); font-size: 0.95rem;">
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.8rem; margin-top: 0.5rem; font-size: 1rem;">Register Account</button>
+  </form>
+
+  <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-top: 1.5rem;">
+    Already registered? <a href="{{ url_for('auth.login') }}" style="color: var(--primary); font-weight: 600; text-decoration: none;">Sign in here</a>
+  </p>
+</div>
+{% endblock %}

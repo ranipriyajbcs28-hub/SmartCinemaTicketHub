@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}{{ movie.title }} — Showtimes & Reviews{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
+  
+  <!-- Movie Header Banner -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); overflow: hidden; display: flex; flex-wrap: wrap; margin-bottom: 2.5rem; box-shadow: var(--shadow-lg);">
+    <div style="width: 320px; min-width: 280px; height: 440px; background: var(--bg-subtle);">
+      <img src="{{ movie.poster or 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500' }}" alt="{{ movie.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+    </div>
+    <div style="flex: 1; min-width: 300px; padding: 2.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <span style="background: var(--primary); color: #000; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">★ {{ avg_rating }}</span>
+          <span style="color: var(--text-muted); font-size: 0.9rem;">({{ total_reviews }} reviews)</span>
+          <span style="color: var(--text-secondary);">&bull;</span>
+          <span style="color: var(--text-secondary); font-size: 0.9rem;">{{ movie.genre }}</span>
+          <span style="color: var(--text-secondary);">&bull;</span>
+          <span style="color: var(--text-secondary); font-size: 0.9rem;">{{ movie.language }}</span>
+        </div>
+        <h1 style="font-size: 2.4rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.75rem;">{{ movie.title }}</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;">
+          Duration: <strong style="color: var(--text-primary);">{{ movie.duration }} mins</strong> &bull; Release Date: <strong style="color: var(--text-primary);">{{ movie.release_date_str }}</strong>
+        </p>
+        <p style="color: var(--text-secondary); line-height: 1.7; font-size: 1.05rem; margin-bottom: 1.5rem;">{{ movie.description }}</p>
+      </div>
+
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        {% if movie.trailer %}
+          <a href="{{ movie.trailer }}" target="_blank" class="btn btn-secondary">▶ Watch Trailer</a>
+        {% endif %}
+        <a href="{{ url_for('review.sentiment_analysis', movie_id=movie.movie_id) }}" class="btn btn-secondary">📊 AI Sentiment Analytics</a>
+        <a href="{{ url_for('review.submit_review', movie_id=movie.movie_id) }}" class="btn btn-primary">✍ Write a Review</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Showtimes Section -->
+  <div style="margin-bottom: 3.5rem;">
+    <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.5rem;">🎟 Available Showtimes</h2>
+    
+    {% if has_shows %}
+      {% for tid, tdata in theatres_dict.items() %}
+      <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem; margin-bottom: 1.5rem;">
+        <div style="margin-bottom: 1.25rem;">
+          <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">{{ tdata.theatre_name }}</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem;">📍 {{ tdata.location }}</p>
+        </div>
+
+        {% for date_str, show_list in tdata.dates.items() %}
+        <div style="margin-bottom: 1.25rem;">
+          <h4 style="font-size: 0.9rem; color: var(--primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem;">📅 {{ date_str }}</h4>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            {% for s in show_list %}
+            <a href="{{ url_for('booking.seat_selection', show_id=s.show_id) }}" class="btn btn-secondary" style="display: flex; flex-direction: column; align-items: center; padding: 0.6rem 1.25rem; border-radius: var(--radius-md); border-color: var(--border);">
+              <span style="font-weight: 700; font-size: 1rem; color: var(--text-primary);">{{ s.show_time }}</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">{{ s.screen_name }} &bull; {{ format_currency(s.ticket_price) }}</span>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+        <p style="color: var(--text-muted); font-size: 1.1rem;">No current showtimes scheduled for this movie.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Reviews Preview -->
+  <div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary);">💬 Audience Reviews ({{ total_reviews }})</h2>
+      <a href="{{ url_for('review.submit_review', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm">+ Add Review</a>
+    </div>
+
+    {% if reviews %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;">
+      {% for r in reviews[:6] %}
+      <div style="background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border); padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <span style="font-weight: 700; color: var(--text-primary);">{{ r.reviewer_name }}</span>
+          <span style="color: var(--primary); font-weight: 700;">★ {{ r.rating }}/5</span>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem;">
+          <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 600; 
+            {% if r.sentiment_label == 'Positive' %}background: var(--success-bg); color: var(--success);
+            {% elif r.sentiment_label == 'Negative' %}background: var(--danger-bg); color: var(--danger);
+            {% else %}background: var(--info-bg); color: var(--info);{% endif %}">
+            AI: {{ r.sentiment_label }} ({{ r.confidence_score|round(1) }}%)
+          </span>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">{{ r.review_date_str }}</span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">{{ r.review_text }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted);">Be the first person to review this movie!</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

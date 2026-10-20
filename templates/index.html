@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Smart Cinema Ticket Hub — Home{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1280px; margin: 0 auto; padding: 0 1.5rem;">
+
+  <!-- Hero Section -->
+  {% if hero_movie %}
+  <section class="hero-banner" style="position: relative; border-radius: var(--radius-xl); overflow: hidden; margin-top: 1.5rem; margin-bottom: 3rem; background: linear-gradient(180deg, rgba(15,23,42,0.6) 0%, rgba(11,15,25,0.95) 100%), url('{{ hero_movie.poster or url_for("static", filename="images/default_banner.jpg") }}') center/cover no-repeat; padding: 4rem 2.5rem; border: 1px solid var(--border); box-shadow: var(--shadow-lg);">
+    <div style="max-width: 650px;">
+      <span class="badge" style="background: var(--primary); color: #000; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; margin-bottom: 1rem;">🔥 Featured Blockbuster</span>
+      <h1 style="font-size: 2.8rem; font-weight: 800; line-height: 1.15; margin-bottom: 1rem; color: #fff;">{{ hero_movie.title }}</h1>
+      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; font-size: 0.95rem; color: var(--text-secondary);">
+        <span style="color: var(--primary); font-weight: 700;">★ {{ hero_movie.rating }} / 5.0</span>
+        <span>•</span>
+        <span>{{ hero_movie.genre }}</span>
+        <span>•</span>
+        <span>{{ hero_movie.language }}</span>
+        <span>•</span>
+        <span>{{ hero_movie.duration }} min</span>
+      </div>
+      <p style="color: var(--text-secondary); margin-bottom: 1.75rem; font-size: 1.05rem; line-height: 1.6;">{{ hero_movie.description[:200] }}...</p>
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="{{ url_for('movie.details', movie_id=hero_movie.movie_id) }}" class="btn btn-primary" style="padding: 0.8rem 1.8rem; font-size: 1.05rem;">Book Tickets Now</a>
+        <a href="{{ url_for('review.sentiment_analysis', movie_id=hero_movie.movie_id) }}" class="btn btn-secondary">AI Sentiment & Reviews</a>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- AI Content-Based Recommendations (If Logged In) -->
+  {% if recommendations_data and recommendations_data.recommended_movies %}
+  <section style="margin-bottom: 3.5rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+      <div>
+        <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+          <span>✨ Recommended For You</span>
+          <span style="font-size: 0.75rem; background: rgba(139,92,246,0.2); color: var(--accent-purple); padding: 0.2rem 0.6rem; border-radius: 9999px;">AI Personalized</span>
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">{{ recommendations_data.reason }}</p>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem;">
+      {% for movie in recommendations_data.recommended_movies %}
+      <div class="movie-card" style="background: var(--bg-card); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); transition: transform 0.2s, border-color 0.2s; display: flex; flex-direction: column;">
+        <div style="position: relative; height: 320px; background: var(--bg-subtle);">
+          <img src="{{ movie.poster or 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500' }}" alt="{{ movie.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+          <div style="position: absolute; top: 12px; right: 12px; background: rgba(15,23,42,0.85); backdrop-filter: blur(8px); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700; color: var(--primary);">
+            ★ {{ movie.rating }}
+          </div>
+        </div>
+        <div style="padding: 1.25rem; display: flex; flex-direction: column; flex: 1; justify-content: space-between;">
+          <div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-primary);">{{ movie.title }}</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">{{ movie.genre }} &bull; {{ movie.language }}</p>
+          </div>
+          <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm" style="width: 100%;">View Shows</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Now Showing Movies -->
+  <section style="margin-bottom: 3.5rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+      <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary);">🎬 Now Showing</h2>
+      <a href="{{ url_for('movie.catalog', status='running') }}" style="color: var(--primary); text-decoration: none; font-size: 0.95rem; font-weight: 600;">View All &rarr;</a>
+    </div>
+    {% if running_movies %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem;">
+      {% for movie in running_movies %}
+      <div class="movie-card" style="background: var(--bg-card); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column;">
+        <div style="position: relative; height: 320px; background: var(--bg-subtle);">
+          <img src="{{ movie.poster or 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500' }}" alt="{{ movie.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+          <div style="position: absolute; top: 12px; right: 12px; background: rgba(15,23,42,0.85); backdrop-filter: blur(8px); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700; color: var(--primary);">
+            ★ {{ movie.rating }}
+          </div>
+        </div>
+        <div style="padding: 1.25rem; display: flex; flex-direction: column; flex: 1; justify-content: space-between;">
+          <div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-primary);">{{ movie.title }}</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">{{ movie.genre }} &bull; {{ movie.duration }} min</p>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm" style="flex: 1;">Book Tickets</a>
+            <a href="{{ url_for('review.sentiment_analysis', movie_id=movie.movie_id) }}" class="btn btn-secondary btn-sm" title="AI Review Analysis">📊</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted);">No movies currently showing.</p>
+    {% endif %}
+  </section>
+
+  <!-- Coming Soon / Upcoming -->
+  {% if upcoming_movies %}
+  <section style="margin-bottom: 3.5rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+      <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary);">🚀 Coming Soon</h2>
+      <a href="{{ url_for('movie.catalog', status='upcoming') }}" style="color: var(--primary); text-decoration: none; font-size: 0.95rem; font-weight: 600;">View All &rarr;</a>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem;">
+      {% for movie in upcoming_movies %}
+      <div class="movie-card" style="background: var(--bg-card); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column;">
+        <div style="position: relative; height: 320px; background: var(--bg-subtle);">
+          <img src="{{ movie.poster or 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500' }}" alt="{{ movie.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+          <div style="position: absolute; top: 12px; left: 12px; background: rgba(239,68,68,0.9); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; color: #fff; text-transform: uppercase;">
+            Upcoming
+          </div>
+        </div>
+        <div style="padding: 1.25rem; display: flex; flex-direction: column; flex: 1; justify-content: space-between;">
+          <div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-primary);">{{ movie.title }}</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">{{ movie.genre }} &bull; {{ movie.language }}</p>
+          </div>
+          <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-secondary btn-sm" style="width: 100%;">View Info</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}

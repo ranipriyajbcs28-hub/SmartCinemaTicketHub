@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block title %}Select Seats — {{ show.title }}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem;">
+  
+  <!-- Show Info Header -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: gap; gap: 1rem;">
+    <div>
+      <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.35rem;">{{ show.title }}</h1>
+      <p style="color: var(--text-secondary); font-size: 0.95rem;">
+        📍 {{ show.theatre_name }} ({{ show.screen_name }}) &bull; 📅 {{ show.show_date }} at {{ show.show_time }}
+      </p>
+    </div>
+    <div style="text-align: right;">
+      <span style="font-size: 0.85rem; color: var(--text-muted); display: block;">Base Ticket Price</span>
+      <span style="font-size: 1.4rem; font-weight: 800; color: var(--primary);">{{ format_currency(show.ticket_price) }}</span>
+    </div>
+  </div>
+
+  <!-- Screen Visualization -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); padding: 2.5rem 1.5rem; text-align: center; margin-bottom: 2rem;">
+    
+    <!-- Cinema Screen Bar -->
+    <div style="max-width: 650px; margin: 0 auto 3rem;">
+      <div style="height: 6px; background: linear-gradient(90deg, transparent, var(--primary), transparent); border-radius: 9999px; box-shadow: 0 0 16px var(--primary);"></div>
+      <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; margin-top: 0.5rem;">All Eyes This Way &bull; Cinema Screen</p>
+    </div>
+
+    <!-- Seat Layout Grid by Tiers -->
+    <div id="seatGrid" data-ticket-price="{{ show.ticket_price }}" style="display: flex; flex-direction: column; gap: 2rem; max-width: 800px; margin: 0 auto;">
+      {% if tiers_dict %}
+        {% for tier_name, tier_rows in tiers_dict.items() %}
+        <div class="seat-tier-section" style="background: var(--bg-main); border: 1px solid 
+              {% if tier_name == 'Balcony' %}rgba(245, 158, 11, 0.35); box-shadow: 0 0 15px rgba(245, 158, 11, 0.08)
+              {% elif tier_name == 'Premium' %}rgba(139, 92, 246, 0.35)
+              {% else %}var(--border){% endif %};
+              border-radius: var(--radius-lg); padding: 1.5rem 1rem;">
+          
+          <!-- Tier Header -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding: 0 1rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 1.2rem;">
+                {% if tier_name == 'Balcony' %}👑{% elif tier_name == 'Premium' %}⭐{% else %}🎫{% endif %}
+              </span>
+              <span style="font-weight: 800; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;
+                    color: {% if tier_name == 'Balcony' %}var(--primary)
+                           {% elif tier_name == 'Premium' %}var(--accent-purple)
+                           {% else %}var(--text-primary){% endif %};">
+                {{ tier_name }} Seating
+              </span>
+            </div>
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); background: var(--bg-card); padding: 0.2rem 0.6rem; border-radius: 9999px; border: 1px solid var(--border);">
+              {% if tier_name == 'Balcony' %}{{ format_currency(show.ticket_price * 1.50) }} (+50%)
+              {% elif tier_name == 'Premium' %}{{ format_currency(show.ticket_price * 1.25) }} (+25%)
+              {% else %}{{ format_currency(show.ticket_price) }} (Base){% endif %}
+            </span>
+          </div>
+
+          <!-- Tier Rows -->
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for row_letter, seats in tier_rows.items() %}
+            <div class="seat-row" style="display: flex; align-items: center; justify-content: center; gap: 0.6rem;">
+              <span class="row-label" style="width: 24px; font-weight: 700; color: var(--text-muted); font-size: 0.9rem;">{{ row_letter }}</span>
+              
+              {% for seat in seats %}
+                <div class="seat {% if seat.is_booked %}booked{% endif %}"
+                     data-seat-id="{{ seat.seat_id }}"
+                     data-seat-number="{{ seat.seat_number }}"
+                     data-seat-type="{{ seat.seat_type }}"
+                     title="Seat {{ seat.seat_number }} ({{ seat.seat_type }})"
+                     style="width: 38px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; cursor: {% if seat.is_booked %}not-allowed{% else %}pointer{% endif %}; transition: all 0.2s;
+                            {% if seat.is_booked %}
+                              background: #1f2937; color: #4b5563; border: 1px solid #374151;
+                            {% elif seat.seat_type == 'Balcony' %}
+                              background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.5); color: var(--primary);
+                            {% elif seat.seat_type == 'Premium' %}
+                              background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.5); color: var(--accent-purple);
+                            {% else %}
+                              background: var(--bg-subtle); border: 1px solid var(--border); color: var(--text-secondary);
+                            {% endif %}">
+                  {{ seat.seat_number[1:] }}
+                </div>
+              {% endfor %}
+
+              <span class="row-label" style="width: 24px; font-weight: 700; color: var(--text-muted); font-size: 0.9rem;">{{ row_letter }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        {% for row_letter, seats in rows_dict.items() %}
+        <div class="seat-row" style="display: flex; align-items: center; justify-content: center; gap: 0.6rem;">
+          <span class="row-label" style="width: 24px; font-weight: 700; color: var(--text-muted); font-size: 0.9rem;">{{ row_letter }}</span>
+          {% for seat in seats %}
+            <div class="seat {% if seat.is_booked %}booked{% endif %}"
+                 data-seat-id="{{ seat.seat_id }}"
+                 data-seat-number="{{ seat.seat_number }}"
+                 data-seat-type="{{ seat.seat_type }}"
+                 style="width: 38px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; cursor: {% if seat.is_booked %}not-allowed{% else %}pointer{% endif %};">
+              {{ seat.seat_number[1:] }}
+            </div>
+          {% endfor %}
+          <span class="row-label" style="width: 24px; font-weight: 700; color: var(--text-muted); font-size: 0.9rem;">{{ row_letter }}</span>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    <!-- Seat Legend -->
+    <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 2.5rem; font-size: 0.85rem; color: var(--text-secondary); flex-wrap: wrap;">
+      {% if not tiers_dict or 'Balcony' in tiers_dict %}
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <div style="width: 18px; height: 18px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 4px;"></div>
+        <span>👑 Balcony (+50%)</span>
+      </div>
+      {% endif %}
+      {% if not tiers_dict or 'Premium' in tiers_dict %}
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <div style="width: 18px; height: 18px; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.5); border-radius: 4px;"></div>
+        <span>⭐ Premium (+25%)</span>
+      </div>
+      {% endif %}
+      {% if not tiers_dict or 'Regular' in tiers_dict %}
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <div style="width: 18px; height: 18px; background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 4px;"></div>
+        <span>🎫 Regular (Base)</span>
+      </div>
+      {% endif %}
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <div style="width: 18px; height: 18px; background: var(--primary); border-radius: 4px;"></div>
+        <span>Selected</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <div style="width: 18px; height: 18px; background: #1f2937; border: 1px solid #374151; border-radius: 4px;"></div>
+        <span>Occupied</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking Checkout Summary Card -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+    <div>
+      <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.25rem;">Selected Seats:</div>
+      <div id="selectedSeatsText" style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">None</div>
+    </div>
+
+    <div>
+      <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.25rem;">Total Price:</div>
+      <div id="totalPriceText" style="font-size: 1.6rem; font-weight: 800; color: var(--primary);">Rs. 0.00</div>
+    </div>
+
+    <form id="bookingForm" method="POST" action="{{ url_for('booking.book_tickets') }}">
+      <input type="hidden" name="show_id" value="{{ show.show_id }}">
+      <div id="seatInputsContainer"></div>
+      <button type="submit" id="checkoutBtn" class="btn btn-primary" style="padding: 0.8rem 2rem; font-size: 1rem;" disabled>
+        Proceed to Checkout &rarr;
+      </button>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+{% endblock %}
