@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Manage Bookings — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
+
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <a href="{{ url_for('admin.dashboard') }}"
+        style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Admin Dashboard</a>
+      <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-top: 0.25rem;">All Customer
+        Bookings</h1>
+    </div>
+
+    <!-- Filter Pills -->
+    <div style="display: flex; gap: 0.5rem;">
+      <a href="{{ url_for('admin.manage_bookings', status='ALL') }}"
+        class="btn {% if status_filter == 'ALL' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">All</a>
+      <a href="{{ url_for('admin.manage_bookings', status='CONFIRMED') }}"
+        class="btn {% if status_filter == 'CONFIRMED' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Confirmed</a>
+      <a href="{{ url_for('admin.manage_bookings', status='CANCELLED') }}"
+        class="btn {% if status_filter == 'CANCELLED' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Cancelled</a>
+    </div>
+  </div>
+
+  <div
+    style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+      <thead>
+        <tr
+          style="background: var(--bg-main); border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
+          <th style="padding: 1rem 1.25rem;">Ref #</th>
+          <th style="padding: 1rem 1.25rem;">Customer</th>
+          <th style="padding: 1rem 1.25rem;">Movie</th>
+          <th style="padding: 1rem 1.25rem;">Venue & Time</th>
+          <th style="padding: 1rem 1.25rem;">Seats</th>
+          <th style="padding: 1rem 1.25rem;">Amount</th>
+          <th style="padding: 1rem 1.25rem;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bookings %}
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 1rem 1.25rem; color: var(--text-muted);">#BK-{{ b.booking_id }}</td>
+          <td style="padding: 1rem 1.25rem;">
+            <strong style="color: var(--text-primary); display: block;">{{ b.user_name }}</strong>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">{{ b.user_email }}</span>
+          </td>
+          <td style="padding: 1rem 1.25rem; font-weight: 700; color: var(--text-primary);">{{ b.movie_title }}</td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ b.theatre_name }} &bull; {{
+            b.show_date_str }} at {{ b.show_time }}</td>
+          <td style="padding: 1rem 1.25rem; color: var(--primary); font-weight: 600;">{{ b.seats_booked or b.seat_list or 'N/A' }}</td>
+          <td style="padding: 1rem 1.25rem; font-weight: 700; color: var(--success);">{{ format_currency(b.total_amount)
+            }}</td>
+          <td style="padding: 1rem 1.25rem;">
+            <span style="font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 9999px; font-weight: 700;
+              {% if (b.status or b.booking_status) == 'CONFIRMED' %}background: var(--success-bg); color: var(--success);
+              {% else %}background: var(--danger-bg); color: var(--danger);{% endif %}">
+              {{ b.status or b.booking_status }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}
