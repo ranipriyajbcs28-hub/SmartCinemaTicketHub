@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-import oracledb
 from database.db import get_connection, query_one, query_all
 
 logger = logging.getLogger(__name__)
@@ -148,7 +147,7 @@ def create_booking(user_id, show_id, seat_ids):
                     return None, f"Booking failed: Seat(s) {taken_seats} were already booked by another customer. Please choose different seats."
 
                 # 4. Insert BOOKING record
-                booking_id_var = cur.var(oracledb.NUMBER)
+                booking_id_var = cur.var('NUMBER')
                 cur.execute("""
                     INSERT INTO BOOKINGS (user_id, show_id, booking_date, total_amount, booking_status)
                     VALUES (:user_id, :show_id, CURRENT_TIMESTAMP, :total_amount, 'CONFIRMED')
