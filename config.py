@@ -11,9 +11,9 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'Rani2007')
     
     # Oracle Database Settings
-    ORACLE_USER = os.getenv('ORACLE_USER', 'cinemahub')
-    ORACLE_PASSWORD = os.getenv('ORACLE_PASSWORD', 'cinemapass123')
-    ORACLE_DSN = os.getenv('ORACLE_DSN', 'localhost:1521/orclpdb')
+    #ORACLE_USER = os.getenv('ORACLE_USER', 'cinemahub')
+    #ORACLE_PASSWORD = os.getenv('ORACLE_PASSWORD', 'cinemapass123')
+    #ORACLE_DSN = os.getenv('ORACLE_DSN', 'localhost:1521/orclpdb')
     
     # MongoDB Settings
     MONGO_URI = os.getenv('MONGO_URI', 'mongodb+srv://ranipriya32007_db_user:Rani2007@cinema-cluster.blgigpj.mongodb.net/')
