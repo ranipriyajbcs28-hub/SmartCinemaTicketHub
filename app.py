@@ -18,11 +18,11 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # Initialize connection pool
+    # Initialize MongoDB connection & cache
     try:
         init_db_pool()
     except Exception as e:
-        logger.error("Could not initialize Oracle DB pool on startup: %s", e)
+        logger.error("Could not initialize MongoDB on startup: %s", e)
 
     # Register Blueprints
     from routes.auth_routes import auth_bp
@@ -45,7 +45,8 @@ def create_app():
     @app.route('/download-zip')
     def download_code_zip():
         from flask import send_file
-        zip_path = Config.BASE_DIR / 'smart_cinema_ticket_hub.zip'
+        from pathlib import Path
+        zip_path = Path(__file__).resolve().parent / 'smart_cinema_ticket_hub.zip'
         return send_file(
             str(zip_path),
             as_attachment=True,
@@ -79,10 +80,10 @@ def create_app():
     def handle_unexpected_exception(error):
         logger.error("Unhandled exception: %s", error, exc_info=True)
         # Check if database related
-        if "oracledb" in str(type(error)).lower() or "ora-" in str(error).lower():
+        if "mongo" in str(type(error)).lower() or "pymongo" in str(type(error)).lower():
             return render_template('error.html', 
                                    error_title="Database Connection Notice", 
-                                   error_message="Unable to communicate with the Oracle Database. Please ensure Oracle listener and service are running."), 503
+                                   error_message="Unable to communicate with MongoDB Atlas. Please ensure cluster network access is allowed."), 503
         return render_template('error.html', 
                                error_title="Service Notice", 
                                error_message="An error occurred while processing your cinema request."), 500
@@ -96,7 +97,7 @@ if __name__ == '__main__':
     print(" SMART CINEMA TICKET HUB — Starting Local Server")
     print("="*60)
     is_db_up, db_msg = check_db_health()
-    print(f" * Oracle Database Status: {db_msg}")
+    print(f" * MongoDB Database Status: {db_msg}")
     print(" * Application running at: http://127.0.0.1:5000")
     print("="*60 + "\n")
     app.run(host='127.0.0.1', port=5000, debug=True)
