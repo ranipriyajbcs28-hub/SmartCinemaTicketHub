@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}Manage Movies — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
+  
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <a href="{{ url_for('admin.dashboard') }}" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Admin Dashboard</a>
+      <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-top: 0.25rem;">Movie Management</h1>
+    </div>
+  </div>
+
+  <!-- Add New Movie Form -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem; margin-bottom: 2.5rem;">
+    <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.25rem;">+ Add New Movie</h2>
+    
+    <form method="POST" action="{{ url_for('admin.manage_movies') }}" enctype="multipart/form-data" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Movie Title *</label>
+        <input type="text" name="title" required placeholder="e.g. Interstellar" style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Language *</label>
+        <input type="text" name="language" required placeholder="e.g. English" style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Genre *</label>
+        <input type="text" name="genre" required placeholder="e.g. Sci-Fi, Drama" style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Duration (Minutes) *</label>
+        <input type="number" name="duration" required placeholder="169" style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Release Date (YYYY-MM-DD) *</label>
+        <input type="date" name="release_date" required style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Initial Rating (0.0 to 5.0)</label>
+        <input type="number" step="0.1" name="rating" value="4.5" style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+      </div>
+
+      <div style="grid-column: 1 / -1;">
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Description *</label>
+        <textarea name="description" rows="2" required placeholder="Synopsis of the movie..." style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);"></textarea>
+      </div>
+
+      <!-- Upload Picture Section -->
+      <div style="grid-column: 1 / -1; background: var(--bg-main); border: 1px dashed var(--border); border-radius: var(--radius-md); padding: 1.25rem;">
+        <label style="display: block; font-weight: 700; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.5rem;">
+          📷 Upload Movie Poster Picture *
+        </label>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Choose a poster image from your device (JPG, PNG, WEBP, JPEG):</p>
+        <div style="display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap;">
+          <input type="file" name="poster_file" id="poster_file" accept="image/*" style="padding: 0.65rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); flex: 1; min-width: 250px;">
+          <div id="posterPreviewContainer" style="display: none; align-items: center; gap: 0.75rem; background: var(--bg-card); padding: 0.5rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+            <img id="posterPreview" src="" alt="Preview" style="width: 48px; height: 68px; object-fit: cover; border-radius: 4px; box-shadow: var(--shadow-sm);">
+            <div>
+              <span style="font-size: 0.85rem; font-weight: 700; color: var(--success); display: block;">✓ Image Selected</span>
+              <span id="previewFilename" style="font-size: 0.75rem; color: var(--text-muted);">Ready to upload</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="grid-column: 1 / -1; margin-top: 0.5rem;">
+        <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem;">Add Movie to Catalog</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Movie Catalog Table -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+      <thead>
+        <tr style="background: var(--bg-main); border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
+          <th style="padding: 1rem 1.25rem;">ID</th>
+          <th style="padding: 1rem 1.25rem;">Title</th>
+          <th style="padding: 1rem 1.25rem;">Genre</th>
+          <th style="padding: 1rem 1.25rem;">Language</th>
+          <th style="padding: 1rem 1.25rem;">Duration</th>
+          <th style="padding: 1rem 1.25rem;">Rating</th>
+          <th style="padding: 1rem 1.25rem;">Shows</th>
+          <th style="padding: 1rem 1.25rem;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in movies %}
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 1rem 1.25rem; color: var(--text-muted);">#{{ m.movie_id }}</td>
+          <td style="padding: 1rem 1.25rem; font-weight: 700; color: var(--text-primary);">{{ m.title }}</td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ m.genre }}</td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ m.language }}</td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ m.duration }} min</td>
+          <td style="padding: 1rem 1.25rem; font-weight: 700; color: var(--primary);">★ {{ m.rating }}</td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ m.show_count }}</td>
+          <td style="padding: 1rem 1.25rem;">
+            <div style="display: flex; gap: 0.4rem;">
+              <a href="{{ url_for('admin.edit_movie', movie_id=m.movie_id) }}" class="btn btn-secondary btn-sm">Edit</a>
+              <form method="POST" action="{{ url_for('admin.delete_movie', movie_id=m.movie_id) }}" onsubmit="return confirm('Delete movie? This will cascade remove related shows.');">
+                <button type="submit" class="btn btn-danger btn-sm">Del</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const posterInput = document.getElementById('poster_file');
+    const previewContainer = document.getElementById('posterPreviewContainer');
+    const previewImg = document.getElementById('posterPreview');
+    const filenameSpan = document.getElementById('previewFilename');
+
+    if (posterInput) {
+      posterInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          filenameSpan.textContent = file.name;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            previewImg.src = ev.target.result;
+            previewContainer.style.display = 'flex';
+          };
+          reader.readAsDataURL(file);
+        } else {
+          previewContainer.style.display = 'none';
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}
