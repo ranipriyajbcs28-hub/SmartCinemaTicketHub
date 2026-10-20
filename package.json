@@ -1,0 +1,12 @@
+{
+  "name": "smart-cinema-ticket-hub",
+  "version": "1.0.0",
+  "description": "Smart Cinema Ticket Hub — Python Flask & Oracle Database Ticket Reservation System",
+  "scripts": {
+    "dev": "python app.py",
+    "start": "python app.py"
+  },
+  "keywords": ["cinema", "flask", "oracle", "tickets"],
+  "author": "",
+  "license": "ISC"
+}
