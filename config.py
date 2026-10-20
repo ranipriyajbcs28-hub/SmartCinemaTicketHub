@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / '.env')
 
 class Config:
-    SECRET_KEY = os.getenv('SECRET_KEY', 'default-dev-cinema-hub-key-39284')
+    SECRET_KEY = os.getenv('SECRET_KEY', 'Rani2007')
     
     # Oracle Database Settings
     ORACLE_USER = os.getenv('ORACLE_USER', 'cinemahub')
@@ -16,7 +16,7 @@ class Config:
     ORACLE_DSN = os.getenv('ORACLE_DSN', 'localhost:1521/orclpdb')
     
     # MongoDB Settings
-    MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/')
+    MONGO_URI = os.getenv('MONGO_URI', 'mongodb+srv://ranipriya32007_db_user:Rani2007@cinema-cluster.blgigpj.mongodb.net/')
     MONGO_DB = os.getenv('MONGO_DB', 'cinemahub')
     DATABASE_TYPE = os.getenv('DATABASE_TYPE', 'mongodb') # 'mongodb' or 'oracle'
     
