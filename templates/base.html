@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,47 +8,71 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   {% block extra_head %}{% endblock %}
 </head>
+
 <body>
   <!-- Navigation Bar -->
   <nav class="navbar">
     <div class="nav-container">
-      <a href="{{ url_for('movie.index') }}" class="nav-brand">
+      <a href="{{ url_for('movie.welcome') if not current_user else url_for('movie.index') }}" class="nav-brand">
         <div class="brand-icon">🎬</div>
         Cinema<span class="hub">Hub</span>
       </a>
       <ul class="nav-links">
-        <li><a href="{{ url_for('movie.index') }}">Home</a></li>
-        <li><a href="{{ url_for('movie.catalog') }}">Browse Movies</a></li>
-        {% if current_user and current_user.role == 'ADMIN' %}
-          <li><a href="{{ url_for('admin.dashboard') }}" class="nav-badge-admin">Admin Portal</a></li>
+        <li><a href="{{ url_for('movie.welcome') }}">Welcome</a></li>
+        {% if current_user %}
+        <li><a href="{{ url_for('movie.index') }}">Movies</a></li>
+        <li><a href="{{ url_for('movie.catalog') }}">Browse All</a></li>
+        {% if current_user.role == 'ADMIN' %}
+        <li><a href="{{ url_for('admin.dashboard') }}" class="nav-badge-admin">Admin Portal</a></li>
+        {% endif %}
+        {% else %}
+        <li><a href="{{ url_for('movie.index') }}" style="color: var(--primary); font-weight: 600;">👁️ View Movies
+            (Guest)</a></li>
         {% endif %}
       </ul>
       <div class="nav-auth">
         {% if current_user %}
-          {% if current_user.role != 'ADMIN' and not request.path.startswith('/admin') %}
-            <a href="{{ url_for('booking.history') }}" class="btn btn-secondary btn-sm">My Bookings</a>
-          {% endif %}
-          <a href="{{ url_for('auth.profile') }}" class="btn btn-secondary btn-sm">👤 {{ current_user.name }}</a>
-          <a href="{{ url_for('auth.logout') }}" class="btn btn-danger btn-sm">Logout</a>
+        {% if current_user.role != 'ADMIN' and not request.path.startswith('/admin') %}
+        <a href="{{ url_for('booking.history') }}" class="btn btn-secondary btn-sm">My Bookings</a>
+        {% endif %}
+        <a href="{{ url_for('auth.profile') }}" class="btn btn-secondary btn-sm">👤 {{ current_user.name }}</a>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-danger btn-sm">Logout</a>
         {% else %}
-          <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-sm">Login</a>
-          <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Register</a>
+        <span
+          style="font-size: 0.8rem; background: rgba(245, 158, 11, 0.15); color: var(--primary); padding: 0.35rem 0.65rem; border-radius: 6px; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.3);">
+          👁️ Guest Mode
+        </span>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-sm">Login</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Register</a>
         {% endif %}
       </div>
     </div>
   </nav>
 
+  <!-- Guest Mode View-Only Notice Banner -->
+  {% if not current_user and request.endpoint and request.endpoint != 'movie.welcome' and request.endpoint !=
+  'auth.login' and request.endpoint != 'auth.register' %}
+  <div
+    style="background: linear-gradient(90deg, rgba(245, 158, 11, 0.18), rgba(239, 68, 68, 0.12)); border-bottom: 1px solid rgba(245, 158, 11, 0.35); padding: 0.65rem 1.5rem; text-align: center; font-size: 0.9rem; color: #fde68a;">
+    <span>🔒 <strong>Guest Mode (View Only):</strong> Ticket reservations and bookings are disabled for guests. </span>
+    <a href="{{ url_for('auth.login') }}"
+      style="color: #fff; font-weight: 700; text-decoration: underline; margin-left: 0.5rem;">Sign In to Book &rarr;</a>
+  </div>
+  {% endif %}
+
   <!-- Flash Messages -->
   <div style="max-width: 1280px; margin: 1rem auto; padding: 0 1.5rem;">
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }}" style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.25rem; margin-bottom: 0.75rem; border-radius: 8px;">
-            <span>{{ message }}</span>
-            <button class="alert-close" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: inherit;">&times;</button>
-          </div>
-        {% endfor %}
-      {% endif %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}"
+      style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.25rem; margin-bottom: 0.75rem; border-radius: 8px;">
+      <span>{{ message }}</span>
+      <button class="alert-close"
+        style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: inherit;">&times;</button>
+    </div>
+    {% endfor %}
+    {% endif %}
     {% endwith %}
   </div>
 
@@ -57,14 +82,18 @@
   </main>
 
   <!-- Footer -->
-  <footer style="background: var(--bg-card); border-top: 1px solid var(--border); padding: 2rem 1.5rem; margin-top: 3rem; text-align: center; color: var(--text-muted);">
-    <div style="max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.5rem; align-items: center;">
+  <footer
+    style="background: var(--bg-card); border-top: 1px solid var(--border); padding: 2rem 1.5rem; margin-top: 3rem; text-align: center; color: var(--text-muted);">
+    <div
+      style="max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.5rem; align-items: center;">
       <p style="font-weight: 600; color: var(--text-secondary);">Smart Cinema Ticket Hub &copy; {{ current_year }}</p>
-      <p style="font-size: 0.85rem;">Sem 5 Mini Project &bull; Oracle Database &bull; Machine Learning Sentiment Analysis</p>
+      <p style="font-size: 0.85rem;">Sem 5 Mini Project &bull; MongoDB Database &bull; Machine Learning Sentiment
+        Analysis</p>
     </div>
   </footer>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   {% block extra_scripts %}{% endblock %}
 </body>
+
 </html>
