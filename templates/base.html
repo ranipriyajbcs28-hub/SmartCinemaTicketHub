@@ -13,21 +13,21 @@
   <!-- Navigation Bar -->
   <nav class="navbar">
     <div class="nav-container">
-      <a href="{{ url_for('movie.catalog') if not current_user else url_for('movie.index') }}" class="nav-brand">
+      <a href="{{ url_for('movie.catalog') }}" class="nav-brand">
         <div class="brand-icon">🎬</div>
         Cinema<span class="hub">Hub</span>
       </a>
       <ul class="nav-links">
-        <li><a href="{{ url_for('movie.welcome') }}">Welcome</a></li>
+        <li><a href="{{ url_for('movie.catalog') }}">Welcome</a></li>
         {% if current_user %}
-        <li><a href="{{ url_for('movie.index') }}">Movies</a></li>
+        <li><a href="{{ url_for('movie.catalog') }}">Movies</a></li>
         <li><a href="{{ url_for('movie.catalog') }}">Browse All</a></li>
         {% if current_user.role == 'ADMIN' %}
         <li><a href="{{ url_for('admin.dashboard') }}" class="nav-badge-admin">Admin Portal</a></li>
         {% endif %}
         {% else %}
-        <li><a href="{{ url_for('movie.index') }}" style="color: var(--primary); font-weight: 600;">👁️ View Movies
-            (Guest)</a></li>
+<li><a href="{{ url_for('movie.catalog') }}" style="color: var(--primary); font-weight: 600;">👁️ View Movies
+    (Guest)</a></li>
         {% endif %}
       </ul>
       <div class="nav-auth">
