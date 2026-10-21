@@ -13,7 +13,7 @@
   <!-- Navigation Bar -->
   <nav class="navbar">
     <div class="nav-container">
-      <a href="{{ url_for('movie.welcome') if not current_user else url_for('movie.index') }}" class="nav-brand">
+      <a href="{{ url_for('movie.catalog') if not current_user else url_for('movie.index') }}" class="nav-brand">
         <div class="brand-icon">🎬</div>
         Cinema<span class="hub">Hub</span>
       </a>
