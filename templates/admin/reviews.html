@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Manage Reviews — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
+  
+  <div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('admin.dashboard') }}" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Admin Dashboard</a>
+    <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-top: 0.25rem;">Audience Reviews & Sentiment Moderation</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Moderate customer submissions and inspect machine learning confidence scores</p>
+  </div>
+
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+      <thead>
+        <tr style="background: var(--bg-main); border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
+          <th style="padding: 1rem 1.25rem;">ID</th>
+          <th style="padding: 1rem 1.25rem;">Movie</th>
+          <th style="padding: 1rem 1.25rem;">Reviewer</th>
+          <th style="padding: 1rem 1.25rem;">Rating</th>
+          <th style="padding: 1rem 1.25rem;">Sentiment & Confidence</th>
+          <th style="padding: 1rem 1.25rem;">Review Text</th>
+          <th style="padding: 1rem 1.25rem;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reviews %}
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 1rem 1.25rem; color: var(--text-muted);">#{{ r.review_id }}</td>
+          <td style="padding: 1rem 1.25rem; font-weight: 700; color: var(--text-primary);">{{ r.movie_title }}</td>
+          <td style="padding: 1rem 1.25rem;">
+            <strong style="color: var(--text-primary); display: block;">{{ r.user_name }}</strong>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">{{ r.user_email }}</span>
+          </td>
+          <td style="padding: 1rem 1.25rem; color: var(--primary); font-weight: 700;">★ {{ r.rating }}/5</td>
+          <td style="padding: 1rem 1.25rem;">
+            <span style="font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: 700;
+              {% if r.sentiment_label == 'Positive' %}background: var(--success-bg); color: var(--success);
+              {% elif r.sentiment_label == 'Negative' %}background: var(--danger-bg); color: var(--danger);
+              {% else %}background: var(--info-bg); color: var(--info);{% endif %}">
+              {{ r.sentiment_label }} ({{ (r.confidence_score * 100)|round(1) }}%)
+            </span>
+          </td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary); max-width: 320px; line-height: 1.4;">{{ r.review_text }}</td>
+          <td style="padding: 1rem 1.25rem;">
+            <form method="POST" action="{{ url_for('admin.delete_review', review_id=r.review_id) }}" onsubmit="return confirm('Delete this review?');">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

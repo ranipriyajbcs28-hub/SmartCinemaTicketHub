@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}Manage Theatres — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
+  
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <a href="{{ url_for('admin.dashboard') }}" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Admin Dashboard</a>
+      <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-top: 0.25rem;">Theatre Management</h1>
+    </div>
+    <a href="{{ url_for('admin.manage_screens') }}" class="btn btn-secondary btn-sm">🖥 Manage Screens</a>
+  </div>
+
+  <!-- Add New Theatre Form -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem; margin-bottom: 2.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">+ Add Cinema Venue & Configure Seating Layout</h2>
+      <span style="font-size: 0.8rem; background: rgba(245,158,11,0.15); color: var(--primary); padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 600;">
+        Auto-generates Balcony, Premium & Regular seats
+      </span>
+    </div>
+    
+    <form method="POST" action="{{ url_for('admin.manage_theatres') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem;">
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Theatre Name *</label>
+        <input type="text" name="theatre_name" required placeholder="e.g. PVR INOX Forum Mall" style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Location / Address *</label>
+        <input type="text" name="location" required placeholder="e.g. Koramangala, Bengaluru" style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Initial Screen / Auditorium Name *</label>
+        <input type="text" name="screen_name" value="Screen 1 - Main Audi" required style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Seats Per Row</label>
+        <input type="number" id="seatsPerRowInput" name="seats_per_row" value="10" min="2" max="25" required style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+      </div>
+
+      <!-- Seat Tiers Configuration Box -->
+      <div style="grid-column: 1 / -1; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+          <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">💺 Screen Seating Tiers & Capacity</h3>
+          <div style="font-size: 0.9rem; color: var(--text-muted);">
+            Total Capacity: <strong id="totalSeatsPreview" style="color: var(--primary); font-size: 1.1rem;">100</strong> seats
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+          <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-sm); padding: 1rem;">
+            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-bottom: 0.25rem;">
+              👑 Balcony Seats (Upper Deck)
+            </label>
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Luxury seating tier (+50% price)</span>
+            <input type="number" id="balconySeatsInput" name="balcony_seats" value="20" min="0" max="300" required style="width: 100%; padding: 0.55rem 0.75rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 700;">
+          </div>
+
+          <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-sm); padding: 1rem;">
+            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--accent-purple); margin-bottom: 0.25rem;">
+              ⭐ Premium Seats (Prime Mid)
+            </label>
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Prime club tier (+25% price)</span>
+            <input type="number" id="premiumSeatsInput" name="premium_seats" value="30" min="0" max="300" required style="width: 100%; padding: 0.55rem 0.75rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 700;">
+          </div>
+
+          <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-sm); padding: 1rem;">
+            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--info); margin-bottom: 0.25rem;">
+              🎫 Regular / Standard Seats
+            </label>
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Classic auditorium seating (Base price)</span>
+            <input type="number" id="regularSeatsInput" name="regular_seats" value="50" min="1" max="500" required style="width: 100%; padding: 0.55rem 0.75rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 700;">
+          </div>
+        </div>
+      </div>
+
+      <div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 1rem; margin-top: 0.25rem;">
+        <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2.5rem;">Create Theatre & Generate Seats</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Theatres Table -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+      <thead>
+        <tr style="background: var(--bg-main); border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
+          <th style="padding: 1rem 1.25rem;">ID</th>
+          <th style="padding: 1rem 1.25rem;">Theatre Name</th>
+          <th style="padding: 1rem 1.25rem;">Location</th>
+          <th style="padding: 1rem 1.25rem;">Screens</th>
+          <th style="padding: 1rem 1.25rem;">Total Seats</th>
+          <th style="padding: 1rem 1.25rem;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in theatres %}
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 1rem 1.25rem; color: var(--text-muted);">#{{ t.theatre_id }}</td>
+          <td style="padding: 1rem 1.25rem; font-weight: 700; color: var(--text-primary);">{{ t.theatre_name }}</td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">📍 {{ t.location }}</td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ t.screen_count }} screens</td>
+          <td style="padding: 1rem 1.25rem; color: var(--primary); font-weight: 600;">{{ t.total_seats or 0 }}</td>
+          <td style="padding: 1rem 1.25rem;">
+            <div style="display: flex; gap: 0.4rem;">
+              <a href="{{ url_for('admin.edit_theatre', theatre_id=t.theatre_id) }}" class="btn btn-secondary btn-sm">Edit</a>
+              <form method="POST" action="{{ url_for('admin.delete_theatre', theatre_id=t.theatre_id) }}" onsubmit="return confirm('Delete this theatre and all its screens/shows?');">
+                <button type="submit" class="btn btn-danger btn-sm">Del</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const bInput = document.getElementById('balconySeatsInput');
+  const pInput = document.getElementById('premiumSeatsInput');
+  const rInput = document.getElementById('regularSeatsInput');
+  const totalPreview = document.getElementById('totalSeatsPreview');
+
+  function updateTotal() {
+    const b = parseInt(bInput?.value || 0, 10) || 0;
+    const p = parseInt(pInput?.value || 0, 10) || 0;
+    const r = parseInt(rInput?.value || 0, 10) || 0;
+    if (totalPreview) {
+      totalPreview.textContent = (b + p + r);
+    }
+  }
+
+  [bInput, pInput, rInput].forEach(el => {
+    if (el) el.addEventListener('input', updateTotal);
+  });
+});
+</script>
+{% endblock %}

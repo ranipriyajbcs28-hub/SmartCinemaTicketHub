@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Welcome — Smart Cinema Ticket Hub{% endblock %}
+
+{% block content %}
+<div class="welcome-minimal-wrapper">
+
+  <!-- Minimal Header Branding -->
+  <div style="margin-bottom: 2rem;">
+    <div
+      style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.45rem 1.25rem; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 9999px; font-size: 0.85rem; font-weight: 700; color: var(--primary); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 1.5rem; box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);">
+      <span>✨</span>
+      <span>Smart Cinema Ticket Hub</span>
+    </div>
+
+    <h1
+      style="font-size: 3.25rem; font-weight: 900; line-height: 1.15; letter-spacing: -1px; margin-bottom: 0.5rem; color: var(--text-primary);">
+      Welcome to <span
+        style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 45%, #ef4444 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">CinemaHub</span>
+    </h1>
+  </div>
+
+  <!-- Single Inspiring Cinema Quote -->
+  <div class="welcome-quotes-container">
+    <div class="quote-card">
+      <span class="quote-icon">“</span>
+      <p class="quote-text">
+        Cinema is a matter of what's in the frame and what's out. It awakens our vision and changes the way we see the
+        world.
+      </p>
+      <span class="quote-author">— Martin Scorsese</span>
+    </div>
+  </div>
+
+
+
+  <!-- Actions: Login (Primary) & View as Guest Mode -->
+  <div class="welcome-bottom-action">
+    <div style="display: flex; gap: 1rem; justify-content: center; align-items: center; flex-wrap: wrap;">
+      <!-- Next: Login Button -->
+      <a href="{{ url_for('auth.login') }}" class="btn-welcome-next" id="welcomeNextLoginBtn">
+        <span>Next: Login</span>
+        <span class="btn-arrow-icon">➔</span>
+      </a>
+
+      <!-- View as Guest Mode Button -->
+      <a href="{{ url_for('movie.index') }}" class="btn btn-secondary" id="welcomeGuestModeBtn"
+        style="padding: 1.15rem 2rem; font-size: 1.05rem; font-weight: 700; border-radius: var(--radius-lg); border-color: rgba(245, 158, 11, 0.4);">
+        <span>👁️ View in Guest Mode</span>
+      </a>
+    </div>
+
+    <!-- Guest Mode Notice -->
+    <div
+      style="margin-top: 1.25rem; font-size: 0.88rem; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+      <span>🔒</span>
+      <span><strong>Guest Mode Notice:</strong> Browsing is view-only. Ticket bookings, seat selection, and reviews
+        require login.</span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

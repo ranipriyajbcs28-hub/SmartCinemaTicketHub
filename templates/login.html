@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}Sign In — Smart Cinema Ticket Hub{% endblock %}
+
+{% block content %}
+<div class="login-card-wrapper">
+
+  <!-- Back to Welcome Breadcrumb -->
+  <a href="{{ url_for('movie.welcome') }}" class="login-back-link">
+    <span>←</span>
+    <span>Back to Welcome Page</span>
+  </a>
+
+  <!-- Header -->
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <div style="width: 56px; height: 56px; background: linear-gradient(135deg, var(--primary), #ef4444); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin: 0 auto 1rem; box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);">
+      🎬
+    </div>
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.4rem;">
+      Account Sign In
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">
+      Enter your credentials to book seats and access your account
+    </p>
+  </div>
+
+  <!-- Form with 3 Logical Buttons (Login, Clear, Register) -->
+  <form id="loginForm" method="POST" action="{{ url_for('auth.login') }}" style="display: flex; flex-direction: column; gap: 1.25rem;">
+    <!-- Email Field -->
+    <div>
+      <label for="email" style="display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem;">
+        Email Address <span style="color: var(--danger);">*</span>
+      </label>
+      <input type="email" id="email" name="email" value="{{ email or '' }}" required placeholder="e.g. user@cinema.com" class="form-control" autocomplete="email">
+    </div>
+
+    <!-- Password Field with Show/Hide Toggle -->
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+        <label for="password" style="font-size: 0.9rem; font-weight: 600; color: var(--text-secondary);">
+          Password <span style="color: var(--danger);">*</span>
+        </label>
+        <a href="{{ url_for('auth.forgot_password') }}" style="font-size: 0.85rem; color: var(--primary); text-decoration: none;">Forgot password?</a>
+      </div>
+      <div class="input-with-action">
+        <input type="password" id="password" name="password" required placeholder="••••••••" class="form-control" autocomplete="current-password">
+        <button type="button" id="togglePwdBtn" class="toggle-pwd-btn" title="Toggle password visibility" aria-label="Toggle password visibility">
+          👁️
+        </button>
+      </div>
+    </div>
+
+    <!-- Three Required Action Buttons: Login, Clear, Register -->
+    <div class="login-action-buttons">
+      <!-- 1. LOGIN: Submits the form -->
+      <button type="submit" id="loginSubmitBtn" class="btn-action btn-login-submit" title="Authenticate and Sign In">
+        <span>🔐</span>
+        <span>Login</span>
+      </button>
+
+      <!-- 2. CLEAR: Resets inputs and refocuses email field -->
+      <button type="button" id="clearBtn" class="btn-action btn-clear-form" title="Clear entered email and password">
+        <span>🧹</span>
+        <span>Clear</span>
+      </button>
+
+      <!-- 3. REGISTER: Direct navigation to registration page -->
+      <a href="{{ url_for('auth.register') }}" id="registerNavBtn" class="btn-action btn-register-link" title="Create a new account">
+        <span>✍️</span>
+        <span>Register</span>
+      </a>
+    </div>
+  </form>
+
+  <!-- Clear Feedback Toast (Micro-Interaction) -->
+  <div id="clearNotice" style="display: none; margin-top: 0.75rem; text-align: center; font-size: 0.85rem; color: #34d399; font-weight: 600;">
+    ✓ Form fields cleared
+  </div>
+
+  <!-- Demo Viva Helper Buttons (College Examination / Demonstration) -->
+  <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed var(--border); text-align: center;">
+    <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">
+      ⚡ Viva Demonstration Shortcuts
+    </p>
+    <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;">
+      <button type="button" id="demoAdminBtn" class="btn btn-secondary btn-sm" style="font-size: 0.82rem;">
+        ⚡ Fill Admin (admin@cinema.com)
+      </button>
+      <button type="button" id="demoCustomerBtn" class="btn btn-secondary btn-sm" style="font-size: 0.82rem;">
+        ⚡ Fill Customer (rani@cinema.com)
+      </button>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const clearBtn = document.getElementById('clearBtn');
+    const clearNotice = document.getElementById('clearNotice');
+    const togglePwdBtn = document.getElementById('togglePwdBtn');
+
+    // 1. CLEAR BUTTON LOGIC: Clears inputs and places cursor back into email input
+    if (clearBtn) {
+      clearBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (emailInput) emailInput.value = '';
+        if (passwordInput) passwordInput.value = '';
+        if (emailInput) emailInput.focus();
+
+        // Brief feedback animation
+        if (clearNotice) {
+          clearNotice.style.display = 'block';
+          setTimeout(() => {
+            clearNotice.style.display = 'none';
+          }, 1800);
+        }
+      });
+    }
+
+    // 2. TOGGLE PASSWORD VISIBILITY LOGIC
+    if (togglePwdBtn && passwordInput) {
+      togglePwdBtn.addEventListener('click', () => {
+        const isPassword = passwordInput.getAttribute('type') === 'password';
+        passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+        togglePwdBtn.textContent = isPassword ? '🙈' : '👁️';
+      });
+    }
+  });
+</script>
+{% endblock %}

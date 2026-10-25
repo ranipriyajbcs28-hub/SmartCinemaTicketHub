@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}{{ error_title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 5rem auto; text-align: center; padding: 2rem 1.5rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-md);">
+  <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+  <h1 style="color: var(--primary); font-size: 2rem; margin-bottom: 1rem;">{{ error_title }}</h1>
+  <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.1rem; line-height: 1.6;">{{ error_message }}</p>
+  <div style="display: flex; justify-content: center; gap: 1rem;">
+    <a href="{{ url_for('movie.index') }}" class="btn btn-primary">Back to Movies</a>
+    <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+  </div>
+</div>
+{% endblock %}

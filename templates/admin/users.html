@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Manage Users — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
+  
+  <div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('admin.dashboard') }}" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Admin Dashboard</a>
+    <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-top: 0.25rem;">User Management</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Manage registered user accounts and toggle administrative privileges</p>
+  </div>
+
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+      <thead>
+        <tr style="background: var(--bg-main); border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
+          <th style="padding: 1rem 1.25rem;">ID</th>
+          <th style="padding: 1rem 1.25rem;">Name</th>
+          <th style="padding: 1rem 1.25rem;">Email</th>
+          <th style="padding: 1rem 1.25rem;">Phone</th>
+          <th style="padding: 1rem 1.25rem;">Role</th>
+          <th style="padding: 1rem 1.25rem;">Bookings</th>
+          <th style="padding: 1rem 1.25rem;">Reviews</th>
+          <th style="padding: 1rem 1.25rem;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 1rem 1.25rem; color: var(--text-muted);">#{{ u.user_id }}</td>
+          <td style="padding: 1rem 1.25rem; font-weight: 700; color: var(--text-primary);">{{ u.name }}</td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ u.email }}</td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ u.phone or 'N/A' }}</td>
+          <td style="padding: 1rem 1.25rem;">
+            <span style="font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 9999px; font-weight: 700;
+              {% if u.role == 'ADMIN' %}background: var(--primary); color: #000;
+              {% else %}background: var(--info-bg); color: var(--info);{% endif %}">
+              {{ u.role }}
+            </span>
+          </td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ u.booking_count }}</td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ u.review_count }}</td>
+          <td style="padding: 1rem 1.25rem;">
+            <form method="POST" action="{{ url_for('admin.toggle_user_role', user_id=u.user_id) }}">
+              <button type="submit" class="btn btn-secondary btn-sm" style="font-size: 0.8rem;">
+                Toggle Role
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

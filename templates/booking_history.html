@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}My Bookings — Smart Cinema Ticket Hub{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem;">
+  
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">My Booking History</h1>
+    <p style="color: var(--text-muted);">View and manage your current and past ticket reservations</p>
+  </div>
+
+  {% if bookings %}
+  <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+    {% for b in bookings %}
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.4rem;">
+          <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">{{ b.movie_title }}</h2>
+          <span style="font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 9999px; font-weight: 700;
+            {% if (b.status or b.booking_status) == 'CONFIRMED' %}background: var(--success-bg); color: var(--success);
+            {% else %}background: var(--danger-bg); color: var(--danger);{% endif %}">
+            {{ b.status or b.booking_status }}
+          </span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.25rem;">
+          📍 {{ b.theatre_name }} ({{ b.screen_name }}) &bull; 📅 {{ b.show_date_str }} at {{ b.show_time }}
+        </p>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">
+          Seats: <strong style="color: var(--primary);">{{ b.seats_list or b.seat_list or 'N/A' }}</strong> &bull; Booked on {{ b.booking_date_str }}
+        </p>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 1.25rem;">
+        <div style="text-align: right;">
+          <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Total Paid</span>
+          <span style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary);">{{ format_currency(b.total_amount) }}</span>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <a href="{{ url_for('booking.confirmation', booking_id=b.booking_id) }}" class="btn btn-secondary btn-sm">Ticket</a>
+          {% if (b.status or b.booking_status) == 'CONFIRMED' %}
+          <form method="POST" action="{{ url_for('booking.cancel', booking_id=b.booking_id) }}" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+            <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align: center; padding: 4rem 1rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+    <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 1.5rem;">You have not made any ticket reservations yet.</p>
+    <a href="{{ url_for('movie.index') }}" class="btn btn-primary">Find a Movie to Watch</a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

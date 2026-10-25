@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+{% block title %}Manage Screens — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
+  
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <a href="{{ url_for('admin.manage_theatres') }}" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Theatres</a>
+      <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-top: 0.25rem;">Auditoriums & Screens</h1>
+    </div>
+  </div>
+
+  <!-- Add New Screen Form -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem; margin-bottom: 2.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+      <div>
+        <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary);">+ Add Auditorium Screen & Seat Configuration</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">Define auditorium rows & columns, then configure Balcony and Premium tiers if present.</p>
+      </div>
+      <div id="gridCapacityBadge" style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); border-radius: 9999px; padding: 0.35rem 1rem; font-size: 0.85rem; font-weight: 700; color: var(--primary);">
+        Total Capacity: <span id="badgeTotalSeats">80</span> Seats (8 Rows &times; 10 Columns)
+      </div>
+    </div>
+    
+    <form method="POST" action="{{ url_for('admin.manage_screens') }}" id="screenConfigForm">
+      <!-- Step 1: Venue, Screen & Dimensions (Rows & Columns) -->
+      <div style="background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem;">
+        <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; color: var(--primary); display: block; margin-bottom: 0.75rem;">
+          Step 1: Auditorium Info & Grid Dimensions (Rows &times; Columns)
+        </span>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+          <div>
+            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Theatre Venue *</label>
+            <select name="theatre_id" required style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+              {% for t in theatres %}
+              <option value="{{ t.theatre_id }}">{{ t.theatre_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Screen / Audi Name *</label>
+            <input type="text" name="screen_name" required placeholder="e.g. Screen 2 - Dolby Atmos 4K" style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">
+              Total Number of Rows (A, B, C...) *
+            </label>
+            <input type="number" id="inputTotalRows" name="total_rows" value="8" min="1" max="26" required style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 700;">
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">
+              Number of Columns (Seats per Row) *
+            </label>
+            <input type="number" id="inputTotalColumns" name="total_columns" value="10" min="1" max="30" required style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 700;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Seat Tier Configuration (Balcony & Premium if present) -->
+      <div style="background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+        <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; color: var(--accent-purple); display: block; margin-bottom: 0.75rem;">
+          Step 2: Balcony & Premium Tiers (Configure if Present)
+        </span>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
+          <!-- Balcony Tier Block -->
+          <div style="background: var(--bg-card); border: 1px solid rgba(245,158,11,0.3); border-radius: var(--radius-sm); padding: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 700; color: var(--primary); font-size: 0.95rem;">
+                <input type="checkbox" id="checkBalcony" name="has_balcony" checked style="width: 18px; height: 18px; accent-color: var(--primary);">
+                👑 Balcony Seats Present
+              </label>
+              <span id="balconySeatsBadge" style="font-size: 0.75rem; background: rgba(245,158,11,0.15); color: var(--primary); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 700;">
+                20 seats
+              </span>
+            </div>
+            <div id="balconyRowsContainer">
+              <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Number of Balcony Rows:</label>
+              <input type="number" id="inputBalconyRows" name="balcony_rows" value="2" min="1" max="10" style="width: 100%; padding: 0.55rem 0.75rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 600;">
+              <span id="balconyRowRange" style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.35rem;">Rows: A &bull; B</span>
+            </div>
+          </div>
+
+          <!-- Premium Tier Block -->
+          <div style="background: var(--bg-card); border: 1px solid rgba(139,92,246,0.3); border-radius: var(--radius-sm); padding: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 700; color: var(--accent-purple); font-size: 0.95rem;">
+                <input type="checkbox" id="checkPremium" name="has_premium" checked style="width: 18px; height: 18px; accent-color: var(--accent-purple);">
+                ⭐ Premium Seats Present
+              </label>
+              <span id="premiumSeatsBadge" style="font-size: 0.75rem; background: rgba(139,92,246,0.15); color: var(--accent-purple); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 700;">
+                20 seats
+              </span>
+            </div>
+            <div id="premiumRowsContainer">
+              <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Number of Premium Rows:</label>
+              <input type="number" id="inputPremiumRows" name="premium_rows" value="2" min="1" max="10" style="width: 100%; padding: 0.55rem 0.75rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 600;">
+              <span id="premiumRowRange" style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.35rem;">Rows: C &bull; D</span>
+            </div>
+          </div>
+
+          <!-- Regular Tier Block (Remaining Rows) -->
+          <div style="background: var(--bg-card); border: 1px solid rgba(59,130,246,0.3); border-radius: var(--radius-sm); padding: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <span style="font-weight: 700; color: var(--info); font-size: 0.95rem;">
+                🎫 Regular Seats (Auto Remaining)
+              </span>
+              <span id="regularSeatsBadge" style="font-size: 0.75rem; background: rgba(59,130,246,0.15); color: var(--info); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 700;">
+                40 seats
+              </span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 0.5rem;">
+              Fills all remaining rows after Balcony and Premium configurations.
+            </p>
+            <div style="background: var(--bg-main); padding: 0.45rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+              <span id="regularRowRange" style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary);">Rows: E to H (4 rows)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Layout Preview Map -->
+        <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">
+            🗺 Real-Time Auditorium Layout Map:
+          </span>
+          <div id="seatLayoutMap" style="display: flex; flex-direction: column; gap: 0.4rem; max-width: 100%; overflow-x: auto; padding: 0.5rem; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+            <!-- Rendered dynamically by JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2.5rem; font-size: 1rem; font-weight: 700;">
+          ✨ Generate Screen & Make Seats
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Screens Table -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+      <thead>
+        <tr style="background: var(--bg-main); border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
+          <th style="padding: 1rem 1.25rem;">ID</th>
+          <th style="padding: 1rem 1.25rem;">Screen Name</th>
+          <th style="padding: 1rem 1.25rem;">Theatre</th>
+          <th style="padding: 1rem 1.25rem;">Total Capacity</th>
+          <th style="padding: 1rem 1.25rem;">Shows Scheduled</th>
+          <th style="padding: 1rem 1.25rem;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sc in screens %}
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 1rem 1.25rem; color: var(--text-muted);">#{{ sc.screen_id }}</td>
+          <td style="padding: 1rem 1.25rem; font-weight: 700; color: var(--text-primary);">{{ sc.screen_name }}</td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ sc.theatre_name }}</td>
+          <td style="padding: 1rem 1.25rem; font-weight: 700; color: var(--primary);">{{ sc.total_seats }} seats</td>
+          <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ sc.show_count }}</td>
+          <td style="padding: 1rem 1.25rem;">
+            <div style="display: flex; gap: 0.4rem;">
+              <a href="{{ url_for('admin.manage_seats', screen_id=sc.screen_id) }}" class="btn btn-secondary btn-sm">Seats</a>
+              <form method="POST" action="{{ url_for('admin.delete_screen', screen_id=sc.screen_id) }}" onsubmit="return confirm('Delete screen? All associated shows and seats will be removed.');">
+                <button type="submit" class="btn btn-danger btn-sm">Del</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const inputTotalRows = document.getElementById('inputTotalRows');
+    const inputTotalColumns = document.getElementById('inputTotalColumns');
+    const checkBalcony = document.getElementById('checkBalcony');
+    const inputBalconyRows = document.getElementById('inputBalconyRows');
+    const balconyRowsContainer = document.getElementById('balconyRowsContainer');
+    const balconySeatsBadge = document.getElementById('balconySeatsBadge');
+    const balconyRowRange = document.getElementById('balconyRowRange');
+
+    const checkPremium = document.getElementById('checkPremium');
+    const inputPremiumRows = document.getElementById('inputPremiumRows');
+    const premiumRowsContainer = document.getElementById('premiumRowsContainer');
+    const premiumSeatsBadge = document.getElementById('premiumSeatsBadge');
+    const premiumRowRange = document.getElementById('premiumRowRange');
+
+    const regularSeatsBadge = document.getElementById('regularSeatsBadge');
+    const regularRowRange = document.getElementById('regularRowRange');
+    const badgeTotalSeats = document.getElementById('badgeTotalSeats');
+    const seatLayoutMap = document.getElementById('seatLayoutMap');
+
+    const rowLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    function updateCalculations() {
+      const totalRows = Math.max(1, Math.min(26, parseInt(inputTotalRows.value) || 8));
+      const totalCols = Math.max(1, Math.min(30, parseInt(inputTotalColumns.value) || 10));
+
+      const hasBalcony = checkBalcony.checked;
+      balconyRowsContainer.style.opacity = hasBalcony ? '1' : '0.4';
+      inputBalconyRows.disabled = !hasBalcony;
+      let bRows = hasBalcony ? Math.max(1, Math.min(totalRows, parseInt(inputBalconyRows.value) || 0)) : 0;
+      if (hasBalcony) inputBalconyRows.value = bRows;
+
+      const hasPremium = checkPremium.checked;
+      premiumRowsContainer.style.opacity = hasPremium ? '1' : '0.4';
+      inputPremiumRows.disabled = !hasPremium;
+      let maxPRows = Math.max(0, totalRows - bRows);
+      let pRows = hasPremium ? Math.max(1, Math.min(maxPRows, parseInt(inputPremiumRows.value) || 0)) : 0;
+      if (hasPremium && pRows > maxPRows) {
+        pRows = maxPRows;
+        inputPremiumRows.value = pRows;
+      }
+
+      const rRows = Math.max(0, totalRows - bRows - pRows);
+
+      const bSeats = bRows * totalCols;
+      const pSeats = pRows * totalCols;
+      const rSeats = rRows * totalCols;
+      const totalSeats = totalRows * totalCols;
+
+      badgeTotalSeats.textContent = `${totalSeats}`;
+      document.getElementById('gridCapacityBadge').innerHTML = 
+        `Total Capacity: <span style="font-weight: 800;">${totalSeats}</span> Seats (${totalRows} Rows &times; ${totalCols} Columns)`;
+
+      // Balcony Info
+      if (hasBalcony && bRows > 0) {
+        balconySeatsBadge.textContent = `${bSeats} seats`;
+        balconySeatsBadge.style.display = 'inline-block';
+        const startChar = rowLetters[0];
+        const endChar = rowLetters[bRows - 1];
+        balconyRowRange.textContent = bRows === 1 ? `Row ${startChar} (1 row)` : `Rows: ${startChar} to ${endChar} (${bRows} rows)`;
+      } else {
+        balconySeatsBadge.textContent = `0 seats (Disabled)`;
+        balconyRowRange.textContent = `No Balcony seats in this screen`;
+      }
+
+      // Premium Info
+      let pStartIndex = bRows;
+      if (hasPremium && pRows > 0) {
+        premiumSeatsBadge.textContent = `${pSeats} seats`;
+        premiumSeatsBadge.style.display = 'inline-block';
+        const startChar = rowLetters[pStartIndex];
+        const endChar = rowLetters[pStartIndex + pRows - 1];
+        premiumRowRange.textContent = pRows === 1 ? `Row ${startChar} (1 row)` : `Rows: ${startChar} to ${endChar} (${pRows} rows)`;
+      } else {
+        premiumSeatsBadge.textContent = `0 seats (Disabled)`;
+        premiumRowRange.textContent = `No Premium seats in this screen`;
+      }
+
+      // Regular Info
+      let rStartIndex = bRows + pRows;
+      if (rRows > 0) {
+        regularSeatsBadge.textContent = `${rSeats} seats`;
+        const startChar = rowLetters[rStartIndex];
+        const endChar = rowLetters[rStartIndex + rRows - 1];
+        regularRowRange.textContent = rRows === 1 ? `Row ${startChar} (1 row)` : `Rows: ${startChar} to ${endChar} (${rRows} rows)`;
+      } else {
+        regularSeatsBadge.textContent = `0 seats`;
+        regularRowRange.textContent = `No remaining regular rows`;
+      }
+
+      // Render Visual Layout Map
+      let html = '';
+      let curIdx = 0;
+
+      // Balcony Rows
+      for (let i = 0; i < bRows; i++) {
+        const char = rowLetters[curIdx++];
+        html += renderRowPreview(char, totalCols, 'Balcony', 'rgba(245,158,11,0.2)', 'var(--primary)', '👑');
+      }
+
+      // Premium Rows
+      for (let i = 0; i < pRows; i++) {
+        const char = rowLetters[curIdx++];
+        html += renderRowPreview(char, totalCols, 'Premium', 'rgba(139,92,246,0.2)', 'var(--accent-purple)', '⭐');
+      }
+
+      // Regular Rows
+      for (let i = 0; i < rRows; i++) {
+        const char = rowLetters[curIdx++];
+        html += renderRowPreview(char, totalCols, 'Regular', 'rgba(59,130,246,0.15)', 'var(--info)', '🎫');
+      }
+
+      seatLayoutMap.innerHTML = html;
+    }
+
+    function renderRowPreview(char, cols, type, bg, color, icon) {
+      let dots = '';
+      const displayCols = Math.min(cols, 16);
+      for (let c = 1; c <= displayCols; c++) {
+        dots += `<span style="display:inline-block; width: 18px; height: 18px; line-height: 18px; text-align: center; font-size: 0.65rem; border-radius: 3px; background: ${bg}; color: ${color}; font-weight: 700;">${c}</span>`;
+      }
+      if (cols > 16) {
+        dots += `<span style="font-size: 0.75rem; color: var(--text-muted);">&hellip; +${cols - 16} more</span>`;
+      }
+
+      return `
+        <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.2rem 0;">
+          <span style="width: 22px; font-weight: 800; font-size: 0.8rem; color: ${color}; text-align: right;">${char}</span>
+          <span style="font-size: 0.75rem; width: 85px; font-weight: 700; color: ${color};">${icon} ${type}</span>
+          <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">${dots}</div>
+        </div>
+      `;
+    }
+
+    [inputTotalRows, inputTotalColumns, inputBalconyRows, inputPremiumRows].forEach(el => {
+      el.addEventListener('input', updateCalculations);
+    });
+
+    [checkBalcony, checkPremium].forEach(el => {
+      el.addEventListener('change', updateCalculations);
+    });
+
+    updateCalculations();
+  });
+</script>
+{% endblock %}

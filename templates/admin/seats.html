@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Screen Seats — {{ screen.screen_name }}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1000px; margin: 2rem auto; padding: 0 1.5rem;">
+  <div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('admin.manage_screens') }}" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Back to Screens</a>
+    <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-top: 0.25rem;">{{ screen.screen_name }} — Seat Layout</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">📍 {{ screen.theatre_name }} &bull; Total Capacity: {{ screen.total_seats }} seats</p>
+  </div>
+
+  <!-- Tier Summary Badges -->
+  <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+    <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+      <span style="font-size: 1.4rem;">👑</span>
+      <div>
+        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">Balcony Tier</span>
+        <strong style="color: var(--primary); font-size: 1.2rem;">{{ seats|selectattr('seat_type', 'equalto', 'Balcony')|list|length }} seats</strong>
+      </div>
+    </div>
+
+    <div style="background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.35); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+      <span style="font-size: 1.4rem;">⭐</span>
+      <div>
+        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">Premium Tier</span>
+        <strong style="color: var(--accent-purple); font-size: 1.2rem;">{{ seats|selectattr('seat_type', 'equalto', 'Premium')|list|length }} seats</strong>
+      </div>
+    </div>
+
+    <div style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+      <span style="font-size: 1.4rem;">🎫</span>
+      <div>
+        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">Regular Tier</span>
+        <strong style="color: var(--info); font-size: 1.2rem;">{{ seats|selectattr('seat_type', 'equalto', 'Regular')|list|length }} seats</strong>
+      </div>
+    </div>
+  </div>
+
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap: 0.75rem;">
+      {% for s in seats %}
+      <div style="background: var(--bg-main); border: 1px solid 
+            {% if s.seat_type == 'Balcony' %}rgba(245, 158, 11, 0.5); box-shadow: 0 0 10px rgba(245, 158, 11, 0.15)
+            {% elif s.seat_type == 'Premium' %}rgba(139, 92, 246, 0.5)
+            {% else %}var(--border){% endif %}; 
+            border-radius: 6px; padding: 0.65rem; text-align: center;">
+        <span style="font-weight: 700; font-size: 1rem; color: var(--text-primary); display: block;">{{ s.seat_number }}</span>
+        <span style="font-size: 0.75rem; font-weight: 700;
+              color: {% if s.seat_type == 'Balcony' %}var(--primary)
+                     {% elif s.seat_type == 'Premium' %}var(--accent-purple)
+                     {% else %}var(--info){% endif %};">
+          {{ s.seat_type }}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

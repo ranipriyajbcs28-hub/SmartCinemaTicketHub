@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% block title %}Analytics & Reports — Admin Portal{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
+  
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <a href="{{ url_for('admin.dashboard') }}" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Back to Admin Dashboard</a>
+      <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin-top: 0.25rem;">Business Analytics & Revenue Reports</h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">Comprehensive box office performance, ticket sales, auditorium occupancy, and ML sentiment breakdown</p>
+    </div>
+  </div>
+
+  <!-- Summary KPI Cards -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem;">
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Gross Box Office Revenue</span>
+        <span style="font-size: 1.25rem;">💰</span>
+      </div>
+      <div style="font-size: 2.1rem; font-weight: 800; color: var(--success); margin-top: 0.35rem;">{{ format_currency(summary.total_revenue or 0) }}</div>
+      <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">From {{ summary.total_bookings or 0 }} confirmed bookings</span>
+    </div>
+    
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Total Tickets Sold</span>
+        <span style="font-size: 1.25rem;">🎟️</span>
+      </div>
+      <div style="font-size: 2.1rem; font-weight: 800; color: var(--primary); margin-top: 0.35rem;">{{ summary.total_tickets_sold or 0 }}</div>
+      <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">Across all scheduled screens</span>
+    </div>
+
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Average Seat Occupancy</span>
+        <span style="font-size: 1.25rem;">📊</span>
+      </div>
+      <div style="font-size: 2.1rem; font-weight: 800; color: var(--accent-cyan); margin-top: 0.35rem;">{{ summary.avg_occupancy_rate or 0 }}%</div>
+      <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">Auditorium utilization rate</span>
+    </div>
+
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Positive Sentiment Ratio</span>
+        <span style="font-size: 1.25rem;">⭐</span>
+      </div>
+      <div style="font-size: 2.1rem; font-weight: 800; color: var(--accent-purple); margin-top: 0.35rem;">
+        {% if summary.total_reviews_count and summary.total_reviews_count > 0 %}
+          {{ ((summary.positive_reviews_count / summary.total_reviews_count) * 100)|round(1) }}%
+        {% else %}
+          0%
+        {% endif %}
+      </div>
+      <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">{{ summary.positive_reviews_count or 0 }} of {{ summary.total_reviews_count or 0 }} reviews positive</span>
+    </div>
+  </div>
+
+  <!-- Performance by Movie -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem; margin-bottom: 2.5rem; overflow-x: auto; box-shadow: var(--shadow-sm);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+      <div>
+        <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin: 0;">🎬 Box Office Performance by Movie</h2>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem;">Live transactional revenue, admissions, audience satisfaction ratings, and sentiment</p>
+      </div>
+      <span style="font-size: 0.8rem; background: var(--bg-main); padding: 0.3rem 0.75rem; border-radius: 9999px; border: 1px solid var(--border); color: var(--text-secondary);">
+        Ranked by Revenue
+      </span>
+    </div>
+    
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+      <thead>
+        <tr style="background: var(--bg-main); border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
+          <th style="padding: 1rem;">Rank</th>
+          <th style="padding: 1rem;">Movie Title</th>
+          <th style="padding: 1rem;">Genre / Lang</th>
+          <th style="padding: 1rem;">Tickets Sold</th>
+          <th style="padding: 1rem;">Total Revenue</th>
+          <th style="padding: 1rem;">Audience Rating</th>
+          <th style="padding: 1rem;">Positive Reviews</th>
+          <th style="padding: 1rem;">Performance Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in movie_perf %}
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 1rem; font-weight: 800; color: var(--text-muted);">#{{ loop.index }}</td>
+          <td style="padding: 1rem; font-weight: 700; color: var(--text-primary);">
+            <a href="{{ url_for('movie.details', movie_id=m.movie_id) }}" style="color: var(--text-primary); text-decoration: none; hover: underline;">
+              {{ m.title }}
+            </a>
+          </td>
+          <td style="padding: 1rem; color: var(--text-secondary);">
+            <span style="background: var(--bg-main); border: 1px solid var(--border); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+              {{ m.genre }} &bull; {{ m.language }}
+            </span>
+          </td>
+          <td style="padding: 1rem; font-weight: 700; color: var(--primary);">{{ m.tickets_sold or 0 }} seats</td>
+          <td style="padding: 1rem; font-weight: 800; color: var(--success); font-size: 1.05rem;">
+            {{ format_currency(m.revenue or 0) }}
+          </td>
+          <td style="padding: 1rem; color: #f59e0b; font-weight: 700;">★ {{ m.avg_rating or 'N/A' }}</td>
+          <td style="padding: 1rem; color: var(--accent-purple); font-weight: 600;">
+            {{ m.pos_sentiment_count or 0 }} / {{ m.review_count or 0 }}
+          </td>
+          <td style="padding: 1rem;">
+            <span style="font-size: 0.75rem; padding: 0.25rem 0.65rem; border-radius: 9999px; font-weight: 700; background: {{ m.tier_color }}22; color: {{ m.tier_color }}; border: 1px solid {{ m.tier_color }}44;">
+              {{ m.box_office_tier }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Performance by Theatre -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem; margin-bottom: 2.5rem; overflow-x: auto; box-shadow: var(--shadow-sm);">
+    <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">🏛 Revenue Performance by Theatre Venue</h2>
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Auditorium occupancy, reservations, and gross sales generated across cinema multiplexes</p>
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+      <thead>
+        <tr style="background: var(--bg-main); border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
+          <th style="padding: 1rem;">Theatre Venue</th>
+          <th style="padding: 1rem;">Location</th>
+          <th style="padding: 1rem;">Screens</th>
+          <th style="padding: 1rem;">Reservations</th>
+          <th style="padding: 1rem;">Seats Booked</th>
+          <th style="padding: 1rem;">Revenue Generated</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in theatre_perf %}
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 1rem; font-weight: 700; color: var(--text-primary);">{{ t.theatre_name }}</td>
+          <td style="padding: 1rem; color: var(--text-secondary);">📍 {{ t.location }}</td>
+          <td style="padding: 1rem; color: var(--text-secondary);">{{ t.screen_count or 1 }} Screens</td>
+          <td style="padding: 1rem; color: var(--primary); font-weight: 600;">{{ t.bookings_count or 0 }} bookings</td>
+          <td style="padding: 1rem; color: var(--text-secondary);">{{ t.tickets_sold or 0 }} tickets</td>
+          <td style="padding: 1rem; font-weight: 800; color: var(--success); font-size: 1rem;">{{ format_currency(t.revenue or 0) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Grid for Sentiment Breakdown & Top Customers -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 1.5rem;">
+    
+    <!-- ML Sentiment Analytics per Movie -->
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem; box-shadow: var(--shadow-sm);">
+      <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">🧠 Sentiment Analytics by Movie</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Natural language machine learning opinion breakdown</p>
+      
+      <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+        {% for s in sentiment_perf %}
+        <div style="background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.9rem 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <strong style="color: var(--text-primary); font-size: 0.95rem;">{{ s.movie_title }}</strong>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">{{ s.total_reviews }} reviews</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem; font-size: 0.8rem;">
+            <span style="color: var(--success); font-weight: 600;">👍 {{ s.pos_count }} Positive</span>
+            <span style="color: var(--text-muted);">&bull;</span>
+            <span style="color: var(--info); font-weight: 600;">😐 {{ s.neu_count }} Neutral</span>
+            <span style="color: var(--text-muted);">&bull;</span>
+            <span style="color: var(--danger); font-weight: 600;">👎 {{ s.neg_count }} Negative</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Top VIP Customers -->
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem; box-shadow: var(--shadow-sm);">
+      <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">👑 Top VIP Customers</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Most active patrons by reservations and spend</p>
+      
+      <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+        {% for u in user_activity %}
+        <div style="background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.9rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong style="color: var(--text-primary); font-size: 0.95rem; display: block;">{{ u.name }}</strong>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">{{ u.email }}</span>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-weight: 800; color: var(--success); font-size: 0.95rem;">{{ format_currency(u.total_spent or 0) }}</div>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">{{ u.booking_count }} bookings &bull; {{ u.review_count }} reviews</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
