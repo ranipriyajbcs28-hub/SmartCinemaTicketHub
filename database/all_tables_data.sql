@@ -554,7 +554,7 @@ INSERT INTO SHOWS (show_id, movie_id, screen_id, show_date, show_time, ticket_pr
 INSERT INTO SHOWS (show_id, movie_id, screen_id, show_date, show_time, ticket_price) VALUES (41, 81, 21, '2026-10-20T00:00:00', '10:30', 250.0);
 INSERT INTO SHOWS (show_id, movie_id, screen_id, show_date, show_time, ticket_price) VALUES (42, 1, 3, '2026-10-22T00:00:00', '10:30', 250.0);
 
--- TABLE: BOOKINGS (24 records)
+-- TABLE: BOOKINGS (25 records)
 INSERT INTO BOOKINGS (booking_id, user_id, show_id, booking_date, total_amount, booking_status) VALUES (1, 2, 1, '2026-09-24T05:44:46.820000', 500.0, 'CONFIRMED');
 INSERT INTO BOOKINGS (booking_id, user_id, show_id, booking_date, total_amount, booking_status) VALUES (2, 3, 1, '2026-09-24T06:44:46.827000', 500.0, 'CONFIRMED');
 INSERT INTO BOOKINGS (booking_id, user_id, show_id, booking_date, total_amount, booking_status) VALUES (3, 4, 3, '2026-09-24T06:59:46.832000', 1200.0, 'CONFIRMED');
@@ -579,8 +579,9 @@ INSERT INTO BOOKINGS (booking_id, user_id, show_id, booking_date, total_amount, 
 INSERT INTO BOOKINGS (booking_id, user_id, show_id, booking_date, total_amount, booking_status) VALUES (76, 3, 33, '2026-10-19T20:45:00', 600.0, 'CONFIRMED');
 INSERT INTO BOOKINGS (booking_id, user_id, show_id, booking_date, total_amount, booking_status) VALUES (77, 4, 41, '2026-10-20T12:00:00', 500.0, 'CONFIRMED');
 INSERT INTO BOOKINGS (booking_id, user_id, show_id, booking_date, total_amount, booking_status) VALUES (78, 5, 41, '2026-10-21T15:30:00', 500.0, 'CONFIRMED');
+INSERT INTO BOOKINGS (booking_id, user_id, show_id, booking_date, total_amount, booking_status) VALUES (79, 1, 1, '2026-10-25 04:33:08', 250.0, 'CONFIRMED');
 
--- TABLE: BOOKING_SEATS (56 records)
+-- TABLE: BOOKING_SEATS (57 records)
 INSERT INTO BOOKING_SEATS (booking_seat_id, booking_id, seat_id) VALUES (1, 1, 1);
 INSERT INTO BOOKING_SEATS (booking_seat_id, booking_id, seat_id) VALUES (2, 1, 2);
 INSERT INTO BOOKING_SEATS (booking_seat_id, booking_id, seat_id) VALUES (3, 2, 17);
@@ -637,6 +638,7 @@ INSERT INTO BOOKING_SEATS (booking_seat_id, booking_id, seat_id) VALUES (102, 77
 INSERT INTO BOOKING_SEATS (booking_seat_id, booking_id, seat_id) VALUES (103, 77, 126);
 INSERT INTO BOOKING_SEATS (booking_seat_id, booking_id, seat_id) VALUES (104, 78, 125);
 INSERT INTO BOOKING_SEATS (booking_seat_id, booking_id, seat_id) VALUES (105, 78, 126);
+INSERT INTO BOOKING_SEATS (booking_seat_id, booking_id, seat_id) VALUES (106, 79, 3);
 
 -- TABLE: REVIEWS (25 records)
 INSERT INTO REVIEWS (review_id, user_id, movie_id, rating, review_text, sentiment_label, confidence_score, review_date) VALUES (1, 2, 1, 5.0, 'Exceptional cinematic experience with breathtaking sci-fi world-building, stellar sound design and spellbinding performances!', 'Positive', 73.21, '2026-10-24 01:40:22');

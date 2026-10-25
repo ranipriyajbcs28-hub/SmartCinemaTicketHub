@@ -68,15 +68,6 @@ def create_app():
         </svg>"""
         return Response(svg, mimetype='image/svg+xml')
 
-    @app.route('/api/debug-welcome')
-    def debug_welcome():
-        import traceback
-        try:
-            from routes.movie_routes import welcome
-            return welcome()
-        except Exception as e:
-            return f"<pre>{traceback.format_exc()}</pre>", 500
-
     @app.route('/api/health')
     def api_health():
         from flask import jsonify

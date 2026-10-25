@@ -114,8 +114,8 @@ def login():
 @auth_bp.route('/logout')
 def logout():
     logout_user()
-    flash("You have been successfully logged out.", "info")
-    return redirect(url_for('movie.index'))
+    flash("You have been successfully logged out. Welcome back!", "info")
+    return redirect(url_for('movie.welcome'))
 
 @auth_bp.route('/profile', methods=['GET', 'POST'])
 @login_required

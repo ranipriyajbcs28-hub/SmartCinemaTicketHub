@@ -5,6 +5,23 @@ from services.recommendation_service import get_recommendations_for_user
 movie_bp = Blueprint('movie', __name__)
 
 @movie_bp.route('/')
+@movie_bp.route('/welcome')
+def welcome():
+    """Welcome landing page for Smart Cinema Ticket Hub with platform overview and next login CTA."""
+    try:
+        movie_count = query_one("SELECT COUNT(*) as c FROM MOVIES")
+        theatre_count = query_one("SELECT COUNT(*) as c FROM THEATRES")
+        screen_count = query_one("SELECT COUNT(*) as c FROM SCREENS")
+        stats = {
+            'movies': movie_count.get('c', 8) if movie_count else 8,
+            'theatres': theatre_count.get('c', 3) if theatre_count else 3,
+            'screens': screen_count.get('c', 6) if screen_count else 6,
+        }
+    except Exception:
+        stats = {'movies': 8, 'theatres': 3, 'screens': 6}
+    return render_template('welcome.html', stats=stats)
+
+@movie_bp.route('/home')
 def index():
     """Cinema home page displaying running movies, upcoming releases, and personalized recommendations."""
     # 1. Currently running movies
