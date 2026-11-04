@@ -147,7 +147,7 @@
         {% for t in theatre_perf %}
         <tr style="border-bottom: 1px solid var(--border);">
           <td style="padding: 1rem; font-weight: 700; color: var(--text-primary);">{{ t.theatre_name }}</td>
-          <td style="padding: 1rem; color: var(--text-secondary);">📍 {{ t.location }}</td>
+          <td style="padding: 1rem; color: var(--text-secondary);">{{ t.location }}</td>
           <td style="padding: 1rem; color: var(--text-secondary);">{{ t.screen_count or 1 }} Screens</td>
           <td style="padding: 1rem; color: var(--primary); font-weight: 600;">{{ t.bookings_count or 0 }} bookings</td>
           <td style="padding: 1rem; color: var(--text-secondary);">{{ t.tickets_sold or 0 }} tickets</td>

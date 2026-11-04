@@ -22,7 +22,7 @@
     <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
       <div>
         <div style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.85rem; background: rgba(245, 158, 11, 0.12); color: var(--primary); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 9999px; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem;">
-          📍 Location-Based Cinema Discovery
+          Location-Based Cinema Discovery
         </div>
         <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.35rem;">
           Browse Theatres Near Your Location
@@ -35,10 +35,10 @@
       <!-- Quick Location Selector Form -->
       <form method="GET" action="{{ url_for('movie.browse_theatres') }}" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
         <select name="location" onchange="this.form.submit()" style="padding: 0.65rem 1rem; background: var(--bg-main); border: 1.5px solid var(--primary); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 700; font-size: 0.9rem;">
-          <option value="all">🌐 All Locations ({{ all_locations|length }} Areas)</option>
+          <option value="all">All Locations ({{ all_locations|length }} Areas)</option>
           {% for loc in all_locations %}
           <option value="{{ loc }}" {% if selected_location == loc %}selected{% endif %}>
-            📍 {{ loc }}
+            {{ loc }}
           </option>
           {% endfor %}
         </select>
@@ -62,7 +62,7 @@
           <a href="{{ url_for('movie.browse_theatres', location=loc) }}" 
              class="btn {% if selected_location == loc %}btn-primary{% else %}btn-secondary{% endif %} btn-sm" 
              style="font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem;">
-            <span>📍</span> <span>{{ short_name }}</span>
+            <span>{{ short_name }}</span>
           </a>
         {% endfor %}
       </div>
@@ -97,7 +97,7 @@
             </span>
           </div>
           <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0; display: flex; align-items: center; gap: 0.4rem;">
-            <span>📍</span> <span>{{ t.location }}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 4px; color: var(--primary);"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span>{{ t.location }}</span>
           </p>
         </div>
 
@@ -155,7 +155,7 @@
   </div>
   {% else %}
   <div style="text-align: center; padding: 4rem 1.5rem; background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); margin-bottom: 2.5rem;">
-    <div style="font-size: 2.5rem; margin-bottom: 1rem;">📍</div>
+    <div style="font-size: 2rem; margin-bottom: 1rem; color: var(--primary);"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
     <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">No Theatres Found in this Location</h3>
     <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
       We currently have cinema theatres across 14 Bangalore locations. Try selecting another area or browse all theatres.

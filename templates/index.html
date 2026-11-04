@@ -11,7 +11,7 @@
     </a>
     <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
       <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; border-color: rgba(245, 158, 11, 0.45); color: var(--primary); font-weight: 700;">
-        <span>📍</span> <span>Next: Browse Theatres Near You</span> <span>→</span>
+        <span>Next: Browse Theatres Near You</span> <span>→</span>
       </a>
       <a href="{{ url_for('movie.catalog') }}" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
         <span>🎬</span> <span>Next: Full Movie Catalog</span> <span>→</span>
@@ -73,7 +73,7 @@
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">{{ movie.genre }} &bull; {{ movie.duration }} min</p>
           </div>
           <div style="display: flex; gap: 0.4rem;">
-            <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm" style="flex: 1;">Book Tickets &rarr;</a>
+            <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}#book-tickets" class="btn btn-primary btn-sm" style="flex: 1;">Book Tickets &rarr;</a>
             <a href="{{ url_for('review.sentiment_analysis', movie_id=movie.movie_id) }}" class="btn btn-secondary btn-sm" title="AI Review Analysis">📊</a>
           </div>
         </div>
@@ -88,7 +88,7 @@
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
       <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary);">🎬 Now Showing in Theatres</h2>
       <div style="display: flex; gap: 0.75rem; align-items: center;">
-        <a href="{{ url_for('movie.browse_theatres') }}" style="color: var(--primary); text-decoration: none; font-size: 0.95rem; font-weight: 700;">📍 Theatres Near You &rarr;</a>
+        <a href="{{ url_for('movie.browse_theatres') }}" style="color: var(--primary); text-decoration: none; font-size: 0.95rem; font-weight: 700;">Theatres Near You &rarr;</a>
         <a href="{{ url_for('movie.catalog') }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.95rem; font-weight: 600;">Full Catalog &rarr;</a>
       </div>
     </div>
@@ -109,7 +109,7 @@
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">{{ movie.genre }} &bull; {{ movie.duration }} min</p>
           </div>
           <div style="display: flex; gap: 0.4rem;">
-            <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm" style="flex: 1;">Book Tickets &rarr;</a>
+            <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}#book-tickets" class="btn btn-primary btn-sm" style="flex: 1;">Book Tickets &rarr;</a>
             {% if movie.trailer %}
               <a href="{{ movie.trailer }}" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.4rem 0.65rem; color: #fb7185; border-color: rgba(225, 29, 72, 0.35);" title="Watch Trailer">▶</a>
             {% endif %}
@@ -145,7 +145,7 @@
             <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-primary);">{{ movie.title }}</h3>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">{{ movie.genre }} &bull; {{ movie.language }}</p>
           </div>
-          <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-secondary btn-sm" style="width: 100%;">View Info &rarr;</a>
+          <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}#book-tickets" class="btn btn-secondary btn-sm" style="width: 100%;">View Info &rarr;</a>
         </div>
       </div>
       {% endfor %}
@@ -160,7 +160,7 @@
     </a>
     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
       <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary" style="color: var(--primary); font-weight: 700;">
-        📍 Next: Browse Theatres Near Location &rarr;
+        Next: Browse Theatres Near Location &rarr;
       </a>
       <a href="{{ url_for('movie.catalog') }}" class="btn btn-primary" style="padding: 0.8rem 2rem;">
         Next: Browse Full Movie Catalog &rarr;

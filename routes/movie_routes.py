@@ -292,10 +292,42 @@ def details(movie_id):
 
     can_review = bool(has_watched and not is_admin)
 
+    # Fetch distinct locations for booking-time location picker
+    loc_rows = query_all("SELECT DISTINCT location FROM THEATRES ORDER BY location")
+    all_locations = [r['location'] for r in loc_rows if r.get('location')]
+
+    # Location selection at booking time
+    selected_loc = request.args.get('location')
+    if selected_loc is not None:
+        selected_loc = selected_loc.strip()
+        if selected_loc.lower() == 'all' or not selected_loc:
+            session.pop('booking_location', None)
+            selected_loc = None
+        else:
+            session['booking_location'] = selected_loc
+    else:
+        selected_loc = session.get('booking_location')
+
+    # Filter theatres by location if selected
+    all_theatres_count = len(theatres_dict)
+    if selected_loc:
+        target_loc = selected_loc.lower()
+        filtered_theatres = {}
+        for tid, tdata in theatres_dict.items():
+            loc = tdata['location'].lower()
+            if target_loc in loc or loc in target_loc:
+                filtered_theatres[tid] = tdata
+    else:
+        filtered_theatres = theatres_dict
+
     return render_template(
         'movie_details.html',
         movie=movie,
-        theatres_dict=theatres_dict,
+        theatres_dict=filtered_theatres,
+        all_theatres_count=all_theatres_count,
+        filtered_count=len(filtered_theatres),
+        all_locations=all_locations,
+        selected_location=selected_loc,
         has_shows=len(shows) > 0,
         reviews=reviews,
         total_reviews=total_reviews,

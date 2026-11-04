@@ -39,3 +39,5 @@ env/
 # Project specific
 smart_cinema_ticket_hub.zip
 flask_server.log
+
+scratch/

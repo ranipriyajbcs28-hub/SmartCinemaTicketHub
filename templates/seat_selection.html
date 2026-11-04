@@ -12,7 +12,7 @@
       Step 3 of Booking Sequence: Physical Seat Selection (Balcony, Premium, Regular)
     </div>
     <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--primary); font-weight: 700;">
-      <span>📍</span> <span>Theatres Near You</span> <span>→</span>
+      <span>Theatres Near You</span> <span>→</span>
     </a>
   </div>
 
@@ -36,7 +36,7 @@
     <div>
       <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.35rem;">{{ show.movie_title or show.title }}</h1>
       <p style="color: var(--text-secondary); font-size: 0.95rem;">
-        📍 {{ show.theatre_name }} ({{ show.screen_name }}) &bull; 📅 {{ show.show_date }} at {{ show.show_time }}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> { show.theatre_name } ({{ show.screen_name }}) &bull; 📅 {{ show.show_date }} at {{ show.show_time }}
       </p>
     </div>
     <div style="text-align: right;">

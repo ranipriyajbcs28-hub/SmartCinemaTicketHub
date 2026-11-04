@@ -13,7 +13,7 @@
       Movie Selection &bull; Step 1: Pick Movie &bull; Step 2: Showtimes &bull; Step 3: Balcony/Seats
     </div>
     <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--primary); font-weight: 700; border-color: rgba(245, 158, 11, 0.45);">
-      <span>📍</span> <span>Next: Browse Theatres Near You</span> <span>→</span>
+      <span>Next: Browse Theatres Near You</span> <span>→</span>
     </a>
   </div>
 
@@ -83,7 +83,7 @@
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">{{ movie.genre }} &bull; {{ movie.language }} &bull; {{ movie.duration }} min</p>
         </div>
         <div style="display: flex; gap: 0.4rem;">
-          <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm" style="flex: 1;">Showtimes &rarr;</a>
+          <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}#book-tickets" class="btn btn-primary btn-sm" style="flex: 1;">Showtimes &rarr;</a>
           {% if movie.trailer %}
             <a href="{{ movie.trailer }}" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.4rem 0.65rem; color: #fb7185; border-color: rgba(225, 29, 72, 0.35);" title="Watch Trailer">▶</a>
           {% endif %}

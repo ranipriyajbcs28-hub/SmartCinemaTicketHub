@@ -28,13 +28,13 @@
         {% endif %}
         {% else %}
         <li><a href="{{ url_for('movie.index') }}" style="color: var(--primary); font-weight: 600;">👁️ View Movies (Guest)</a></li>
-        <li><a href="{{ url_for('movie.browse_theatres') }}">📍 Theatres Near You</a></li>
+        <li><a href="{{ url_for('movie.browse_theatres') }}">Theatres Near You</a></li>
         {% endif %}
       </ul>
       <div class="nav-auth">
         <!-- Customer Location Badge / Switcher -->
         <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; border-color: rgba(245, 158, 11, 0.45); color: var(--primary); font-weight: 700;" title="Click to browse theatres near your location">
-          <span>📍</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 3px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
           <span style="max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
             {{ (session.get('selected_location') or 'Select Location').split(',')[0] }}
           </span>

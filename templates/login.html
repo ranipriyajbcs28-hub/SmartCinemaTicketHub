@@ -49,57 +49,20 @@
       <div style="position: relative;">
         <input type="password" id="password" name="password" required placeholder="••••••••" class="form-control" autocomplete="current-password" style="width: 100%; padding: 0.75rem 2.5rem 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); font-size: 0.95rem;">
         <button type="button" id="togglePwdBtn" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--text-muted);" title="Toggle password visibility" aria-label="Toggle password visibility">
-          👁️
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">SHOW</span>
         </button>
       </div>
     </div>
 
-    <!-- Location Selection Option (Required Feature) -->
-    <div style="background: var(--bg-main); border: 1.5px solid rgba(245, 158, 11, 0.35); border-radius: var(--radius-md); padding: 1.15rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-        <label for="locationSelect" style="font-size: 0.9rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.4rem;">
-          <span>📍</span> <span>Preferred Cinema Location:</span>
-        </label>
-        <span style="font-size: 0.75rem; color: #22c55e; font-weight: 700;">✓ Auto-filter nearby venues</span>
-      </div>
-
-      <div style="position: relative;">
-        <select id="locationSelect" name="location" style="width: 100%; padding: 0.75rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 600; font-size: 0.95rem;">
-          <option value="">🌐 All Locations (Browse All Theatres)</option>
-          {% for loc in locations %}
-          <option value="{{ loc }}" {% if (selected_location or session.get('selected_location')) == loc %}selected{% endif %}>
-            📍 {{ loc }}
-          </option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.5rem 0 0.6rem 0; line-height: 1.4;">
-        Select your area to instantly browse available theatres, screens, and showtimes near your location upon signing in.
-      </p>
-
-      <!-- Popular Location Quick Chips -->
-      <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-        <span style="font-size: 0.72rem; color: var(--text-muted); align-self: center;">Quick Select:</span>
-        <button type="button" onclick="selectLocationChip('Koramangala, Bengaluru')" style="font-size: 0.72rem; padding: 0.2rem 0.55rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 9999px; color: var(--text-secondary); cursor: pointer;">Koramangala</button>
-        <button type="button" onclick="selectLocationChip('Indiranagar 100ft Road, Bengaluru')" style="font-size: 0.72rem; padding: 0.2rem 0.55rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 9999px; color: var(--text-secondary); cursor: pointer;">Indiranagar</button>
-        <button type="button" onclick="selectLocationChip('MG Road, Bengaluru')" style="font-size: 0.72rem; padding: 0.2rem 0.55rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 9999px; color: var(--text-secondary); cursor: pointer;">MG Road</button>
-        <button type="button" onclick="selectLocationChip('Whitefield Main Road, Bengaluru')" style="font-size: 0.72rem; padding: 0.2rem 0.55rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 9999px; color: var(--text-secondary); cursor: pointer;">Whitefield</button>
-        <button type="button" onclick="selectLocationChip('Bellary Road, Hebbal, Bengaluru')" style="font-size: 0.72rem; padding: 0.2rem 0.55rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 9999px; color: var(--text-secondary); cursor: pointer;">Hebbal</button>
-      </div>
-    </div>
-
     <!-- Action Buttons (Login, Clear, Register) -->
-    <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap;">
-      <!-- 1. LOGIN & BROWSE THEATRES -->
+    <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap;">
+      <!-- 1. LOGIN -->
       <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="flex: 2; min-width: 200px; padding: 0.85rem 1.25rem; font-size: 1rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
-        <span>🔐</span>
-        <span>Login & Browse Theatres &rarr;</span>
+        <span>Login & Continue &rarr;</span>
       </button>
 
       <!-- 2. CLEAR -->
       <button type="button" id="clearBtn" class="btn btn-secondary" style="flex: 1; padding: 0.85rem; font-size: 0.95rem; font-weight: 600;" title="Clear email and password fields">
-        <span>🧹</span>
         <span>Clear</span>
       </button>
     </div>
@@ -138,14 +101,6 @@
 
 {% block extra_scripts %}
 <script>
-  function selectLocationChip(loc) {
-    const sel = document.getElementById('locationSelect');
-    if (sel) {
-      sel.value = loc;
-      sel.style.borderColor = 'var(--primary)';
-    }
-  }
-
   document.addEventListener('DOMContentLoaded', () => {
     const emailInput = document.getElementById('email');
     const pwdInput = document.getElementById('password');
@@ -158,10 +113,10 @@
       toggleBtn.addEventListener('click', () => {
         if (pwdInput.type === 'password') {
           pwdInput.type = 'text';
-          toggleBtn.textContent = '🔒';
+          toggleBtn.innerHTML = '<span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">HIDE</span>';
         } else {
           pwdInput.type = 'password';
-          toggleBtn.textContent = '👁️';
+          toggleBtn.innerHTML = '<span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">SHOW</span>';
         }
       });
     }
