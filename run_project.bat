@@ -9,8 +9,8 @@ echo  * Localhost URL:   http://127.0.0.1:5000
 echo  * Alternative URL: http://localhost:5000
 echo.
 echo  * Default Login Credentials:
-echo    - Admin Portal:    admin@cinema.com / Admin@123
-echo    - Customer Login:  rani@cinema.com  / Password@123
+echo    - Admin Portal:    admin@cinema.com / admin123
+echo    - Customer Login:  rani@cinema.com  / user123
 echo.
 echo  * Database Mode: Dual-Engine (MongoDB Atlas Cloud + Full Offline Fallback)
 echo =====================================================================

@@ -11,8 +11,8 @@ echo.
 echo  * Database: Full Offline Cinema Database (25 Movies, 1000+ Shows)
 echo.
 echo  * Default Accounts:
-echo    - Admin Portal:    admin@cinema.com / Admin@123
-echo    - Customer Login:  rani@cinema.com  / Password@123
+echo    - Admin Portal:    admin@cinema.com / admin123
+echo    - Customer Login:  rani@cinema.com  / user123
 echo.
 echo  No internet connection or external cluster needed!
 echo =====================================================================
