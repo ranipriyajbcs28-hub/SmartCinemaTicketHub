@@ -20,14 +20,14 @@ cd /d "%~dp0"
 
 REM 1. Detect Working Python Executable
 set PYTHON_EXE=
-if exist "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" set PYTHON_EXE="%LOCALAPPDATA%\Programs\Python\Python313\python.exe"
-if "%PYTHON_EXE%"=="" if exist "C:\Users\RANI PRIYA\AppData\Local\Programs\Python\Python313\python.exe" set PYTHON_EXE="C:\Users\RANI PRIYA\AppData\Local\Programs\Python\Python313\python.exe"
-if "%PYTHON_EXE%"=="" if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" set PYTHON_EXE="%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
-if "%PYTHON_EXE%"=="" if exist "C:\Python313\python.exe" set PYTHON_EXE="C:\Python313\python.exe"
-if "%PYTHON_EXE%"=="" set PYTHON_EXE=python
+if exist "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" set PYTHON_EXE=%LOCALAPPDATA%\Programs\Python\Python313\python.exe
+if not defined PYTHON_EXE if exist "C:\Users\RANI PRIYA\AppData\Local\Programs\Python\Python313\python.exe" set PYTHON_EXE=C:\Users\RANI PRIYA\AppData\Local\Programs\Python\Python313\python.exe
+if not defined PYTHON_EXE if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" set PYTHON_EXE=%LOCALAPPDATA%\Programs\Python\Python312\python.exe
+if not defined PYTHON_EXE if exist "C:\Python313\python.exe" set PYTHON_EXE=C:\Python313\python.exe
+if not defined PYTHON_EXE set PYTHON_EXE=python
 
-echo [1/3] Using Python: %PYTHON_EXE%
-%PYTHON_EXE% --version
+echo [1/3] Using Python: "%PYTHON_EXE%"
+"%PYTHON_EXE%" --version
 if errorlevel 1 (
     echo.
     echo [ERROR] Python failed to start.
@@ -51,15 +51,15 @@ echo.
 echo  ===================================================================
 echo   Server is running successfully!
 echo   Click or open in your browser:
-echo   --> http://127.0.0.1:5000
-echo   --> http://localhost:5000
+echo   --^> http://127.0.0.1:5000
+echo   --^> http://localhost:5000
 echo  ===================================================================
 echo.
 
 REM Automatically open browser in 2 seconds
 start "" cmd /c "timeout /t 2 /nobreak >nul && start http://127.0.0.1:5000"
 
-%PYTHON_EXE% app.py
+"%PYTHON_EXE%" app.py
 if errorlevel 1 (
     echo.
     echo [ERROR] The server stopped with an error.
