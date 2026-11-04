@@ -81,20 +81,7 @@
     ✓ Form fields cleared
   </div>
 
-  <!-- Viva Shortcuts -->
-  <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed var(--border); text-align: center;">
-    <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">
-      ⚡ Viva Demonstration Shortcuts
-    </p>
-    <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;">
-      <button type="button" id="demoAdminBtn" class="btn btn-secondary btn-sm" style="font-size: 0.82rem;">
-        ⚡ Fill Admin (admin@cinema.com)
-      </button>
-      <button type="button" id="demoCustomerBtn" class="btn btn-secondary btn-sm" style="font-size: 0.82rem;">
-        ⚡ Fill Customer (rani@cinema.com)
-      </button>
-    </div>
-  </div>
+
 
 </div>
 {% endblock %}
@@ -134,23 +121,7 @@
       });
     }
 
-    // Demo viva autofills
-    const demoAdminBtn = document.getElementById('demoAdminBtn');
-    const demoCustBtn = document.getElementById('demoCustomerBtn');
 
-    if (demoAdminBtn) {
-      demoAdminBtn.addEventListener('click', () => {
-        if (emailInput) emailInput.value = 'admin@cinema.com';
-        if (pwdInput) pwdInput.value = 'admin123';
-      });
-    }
-
-    if (demoCustBtn) {
-      demoCustBtn.addEventListener('click', () => {
-        if (emailInput) emailInput.value = 'rani@cinema.com';
-        if (pwdInput) pwdInput.value = 'user123';
-      });
-    }
   });
 </script>
 {% endblock %}
