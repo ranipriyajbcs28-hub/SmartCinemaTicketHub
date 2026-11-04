@@ -3,6 +3,19 @@
 
 {% block content %}
 <div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
+  <!-- Page Sequence Navigation Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; padding: 0.75rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);">
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+      <span>←</span> <span>Previous: Admin Dashboard</span>
+    </a>
+    <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+      Step 3 of Admin Sequence: Movie Catalog, Posters & Trailers
+    </div>
+    <a href="{{ url_for('admin.manage_shows') }}" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+      <span>Next: Schedule Cinema Shows</span> <span>→</span>
+    </a>
+  </div>
+
   
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
     <div>
@@ -47,6 +60,12 @@
       </div>
 
       <div style="grid-column: 1 / -1;">
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">🎬 Trailer URL (YouTube Link or Embed)</label>
+        <input type="url" name="trailer" id="trailer" placeholder="e.g. https://www.youtube.com/watch?v=EXeTwQWrcwY" style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);">
+        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">Provide a YouTube watch link or direct embed link for instant in-app trailer playback</span>
+      </div>
+
+      <div style="grid-column: 1 / -1;">
         <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem;">Description *</label>
         <textarea name="description" rows="2" required placeholder="Synopsis of the movie..." style="width: 100%; padding: 0.65rem 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);"></textarea>
       </div>
@@ -86,6 +105,7 @@
           <th style="padding: 1rem 1.25rem;">Language</th>
           <th style="padding: 1rem 1.25rem;">Duration</th>
           <th style="padding: 1rem 1.25rem;">Rating</th>
+          <th style="padding: 1rem 1.25rem;">Trailer</th>
           <th style="padding: 1rem 1.25rem;">Shows</th>
           <th style="padding: 1rem 1.25rem;">Actions</th>
         </tr>
@@ -99,6 +119,13 @@
           <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ m.language }}</td>
           <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ m.duration }} min</td>
           <td style="padding: 1rem 1.25rem; font-weight: 700; color: var(--primary);">★ {{ m.rating }}</td>
+          <td style="padding: 1rem 1.25rem;">
+            {% if m.trailer %}
+              <a href="{{ m.trailer }}" target="_blank" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.25rem;">▶ Play</a>
+            {% else %}
+              <span style="color: var(--text-muted); font-size: 0.8rem;">None</span>
+            {% endif %}
+          </td>
           <td style="padding: 1rem 1.25rem; color: var(--text-secondary);">{{ m.show_count }}</td>
           <td style="padding: 1rem 1.25rem;">
             <div style="display: flex; gap: 0.4rem;">
@@ -112,6 +139,16 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
+
+  <!-- Bottom Page Sequence Navigation -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 1rem;">
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+      &larr; Previous: Admin Dashboard
+    </a>
+    <a href="{{ url_for('admin.manage_shows') }}" class="btn btn-primary" style="padding: 0.8rem 2rem;">
+      Next: Schedule Cinema Shows &rarr;
+    </a>
   </div>
 
 </div>

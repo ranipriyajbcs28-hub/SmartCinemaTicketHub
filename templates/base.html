@@ -21,16 +21,25 @@
         <li><a href="{{ url_for('movie.welcome') }}">Welcome</a></li>
         {% if current_user %}
         <li><a href="{{ url_for('movie.index') }}">Movies</a></li>
+        <li><a href="{{ url_for('movie.browse_theatres') }}">Theatres Near You</a></li>
         <li><a href="{{ url_for('movie.catalog') }}">Browse All</a></li>
         {% if current_user.role == 'ADMIN' %}
         <li><a href="{{ url_for('admin.dashboard') }}" class="nav-badge-admin">Admin Portal</a></li>
         {% endif %}
         {% else %}
-        <li><a href="{{ url_for('movie.index') }}" style="color: var(--primary); font-weight: 600;">👁️ View Movies
-            (Guest)</a></li>
+        <li><a href="{{ url_for('movie.index') }}" style="color: var(--primary); font-weight: 600;">👁️ View Movies (Guest)</a></li>
+        <li><a href="{{ url_for('movie.browse_theatres') }}">📍 Theatres Near You</a></li>
         {% endif %}
       </ul>
       <div class="nav-auth">
+        <!-- Customer Location Badge / Switcher -->
+        <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; border-color: rgba(245, 158, 11, 0.45); color: var(--primary); font-weight: 700;" title="Click to browse theatres near your location">
+          <span>📍</span>
+          <span style="max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            {{ (session.get('selected_location') or 'Select Location').split(',')[0] }}
+          </span>
+        </a>
+
         {% if current_user %}
         {% if current_user.role != 'ADMIN' and not request.path.startswith('/admin') %}
         <a href="{{ url_for('booking.history') }}" class="btn btn-secondary btn-sm">My Bookings</a>
@@ -87,8 +96,7 @@
     <div
       style="max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.5rem; align-items: center;">
       <p style="font-weight: 600; color: var(--text-secondary);">Smart Cinema Ticket Hub &copy; {{ current_year }}</p>
-      <p style="font-size: 0.85rem;">Sem 5 Mini Project &bull; MongoDB Database &bull; Machine Learning Sentiment
-        Analysis</p>
+      <p style="font-size: 0.85rem;">Non-Grid Auditorium Seating &bull; Upper Balcony Tiers &bull; Location Discovery &bull; Machine Learning Sentiment</p>
     </div>
   </footer>
 

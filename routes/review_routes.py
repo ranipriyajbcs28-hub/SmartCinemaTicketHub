@@ -23,7 +23,24 @@ def submit_review(movie_id):
         flash("Movie not found.", "danger")
         return redirect(url_for('movie.index'))
 
+    # Admin restriction: Admin has no provision to write reviews
+    if session.get('role') == 'ADMIN':
+        flash("Administrators cannot write movie reviews. Reviews are reserved exclusively for cinema audience members who have watched the movie.", "warning")
+        return redirect(url_for('movie.details', movie_id=movie_id))
+
     user_id = session.get('user_id')
+
+    # Watched verification: Only users who booked tickets for this movie can write reviews
+    has_watched = query_one("""
+        SELECT b.booking_id 
+        FROM BOOKINGS b
+        JOIN SHOWS s ON b.show_id = s.show_id
+        WHERE b.user_id = :uid AND s.movie_id = :mid AND b.booking_status = 'CONFIRMED'
+    """, {'uid': user_id, 'mid': movie_id})
+
+    if not has_watched:
+        flash("Only viewers who have booked tickets and watched this movie can submit a review. Please book a showtime to share your feedback!", "warning")
+        return redirect(url_for('movie.details', movie_id=movie_id))
 
     # Check if user already reviewed this movie
     existing_review = query_one("""
@@ -144,8 +161,23 @@ def sentiment_analysis(movie_id):
     # Dynamic Word Cloud Generation enriched with movie context
     wordcloud_b64 = generate_wordcloud_base64(reviews, movie_info=movie)
 
-    # Extract top keywords and sentiment tokens directly from reviews
-    top_keywords = extract_top_keywords(reviews, movie_info=movie, top_n=15)
+    # Determine review eligibility for current viewer
+    user_id = session.get('user_id')
+    user_role = session.get('role')
+    is_admin = (user_role == 'ADMIN')
+    has_watched = False
+
+    if user_id and not is_admin:
+        bcheck = query_one("""
+            SELECT b.booking_id 
+            FROM BOOKINGS b
+            JOIN SHOWS s ON b.show_id = s.show_id
+            WHERE b.user_id = :uid AND s.movie_id = :mid AND b.booking_status = 'CONFIRMED'
+        """, {'uid': user_id, 'mid': movie_id})
+        if bcheck:
+            has_watched = True
+
+    can_review = bool(has_watched and not is_admin)
 
     return render_template(
         'sentiment.html',
@@ -157,5 +189,8 @@ def sentiment_analysis(movie_id):
         negative_pct=negative_pct,
         neutral_pct=neutral_pct,
         wordcloud_b64=wordcloud_b64,
-        top_keywords=top_keywords
+        top_keywords=top_keywords,
+        has_watched=has_watched,
+        is_admin=is_admin,
+        can_review=can_review
     )

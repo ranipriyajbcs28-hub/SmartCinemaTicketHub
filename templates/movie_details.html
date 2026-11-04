@@ -3,15 +3,33 @@
 
 {% block content %}
 <div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
+  <!-- Page Sequence Navigation Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; padding: 0.75rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);">
+    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+      <a href="{{ url_for('movie.catalog') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+        <span>←</span> <span>Previous: Movies Catalog</span>
+      </a>
+      <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; border-color: rgba(245, 158, 11, 0.45); color: var(--primary); font-weight: 700;">
+        <span>📍</span> <span>Theatres Near You</span>
+      </a>
+    </div>
+    <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+      Step 2 of Booking: Showtimes & Auditorium Selection
+    </div>
+    <a href="#showtimes-section" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+      <span>Next: Pick Showtime & Seats</span> <span>↓</span>
+    </a>
+  </div>
+
   
   <!-- Movie Header Banner -->
   <div style="background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); overflow: hidden; display: flex; flex-wrap: wrap; margin-bottom: 2.5rem; box-shadow: var(--shadow-lg);">
-    <div style="width: 320px; min-width: 280px; height: 440px; background: var(--bg-subtle);">
+    <div style="width: 320px; min-width: 280px; height: 460px; background: var(--bg-subtle);">
       <img src="{{ movie.poster or 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500' }}" alt="{{ movie.title }}" style="width: 100%; height: 100%; object-fit: cover;">
     </div>
     <div style="flex: 1; min-width: 300px; padding: 2.5rem; display: flex; flex-direction: column; justify-content: space-between;">
       <div>
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
           <span style="background: var(--primary); color: #000; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">★ {{ avg_rating }}</span>
           <span style="color: var(--text-muted); font-size: 0.9rem;">({{ total_reviews }} reviews)</span>
           <span style="color: var(--text-secondary);">&bull;</span>
@@ -26,27 +44,49 @@
         <p style="color: var(--text-secondary); line-height: 1.7; font-size: 1.05rem; margin-bottom: 1.5rem;">{{ movie.description }}</p>
       </div>
 
-      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
         {% if movie.trailer %}
-          <a href="{{ movie.trailer }}" target="_blank" class="btn btn-secondary">▶ Watch Trailer</a>
+          <button type="button" onclick="openTrailerModal('{{ movie.trailer }}', '{{ movie.title }}')" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(225, 29, 72, 0.15); border-color: rgba(225, 29, 72, 0.4); color: #fb7185;">
+            <span>▶</span> Watch Trailer
+          </button>
         {% endif %}
+        
         <a href="{{ url_for('review.sentiment_analysis', movie_id=movie.movie_id) }}" class="btn btn-secondary">📊 AI Sentiment Analytics</a>
-        {% if current_user %}
-          <a href="{{ url_for('review.submit_review', movie_id=movie.movie_id) }}" class="btn btn-primary">✍ Write a Review</a>
+
+        <!-- Role & Watched Verification Review CTA -->
+        {% if is_admin %}
+          <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.35); padding: 0.6rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem;">
+            🛡️ Admin Review Disabled (Audience Only)
+          </span>
+        {% elif can_review %}
+          <a href="{{ url_for('review.submit_review', movie_id=movie.movie_id) }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            ✍ Write Verified Review <span style="background: rgba(0,0,0,0.25); font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 9999px;">✓ Verified Viewer</span>
+          </a>
+        {% elif current_user %}
+          <a href="#showtimes-section" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem; border-color: rgba(245, 158, 11, 0.4);" title="Only viewers who have booked tickets can review this movie">
+            🎟️ Book Tickets to Review <span style="font-size: 0.75rem; color: #f59e0b;">(Watchers Only)</span>
+          </a>
         {% else %}
-          <a href="{{ url_for('auth.login', next=request.path) }}" class="btn btn-secondary" title="Login to submit a review">🔒 Sign in to Review</a>
+          <a href="{{ url_for('auth.login', next=request.path) }}" class="btn btn-secondary" title="Sign in to check review eligibility">
+            🔒 Sign in to Review
+          </a>
         {% endif %}
       </div>
     </div>
   </div>
 
   <!-- Showtimes Section -->
-  <div style="margin-bottom: 3.5rem;">
-    <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.5rem;">🎟 Available Showtimes</h2>
+  <div id="showtimes-section" style="margin-bottom: 3.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+      <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary);">🎟 Available Showtimes</h2>
+      <span style="font-size: 0.85rem; color: var(--text-muted); background: var(--bg-card); padding: 0.35rem 0.75rem; border-radius: 9999px; border: 1px solid var(--border);">
+        📅 Scheduled Daily Across 14 Theatres
+      </span>
+    </div>
     
     {% if has_shows %}
       {% for tid, tdata in theatres_dict.items() %}
-      <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem; margin-bottom: 1.5rem;">
+      <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
         <div style="margin-bottom: 1.25rem;">
           <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">{{ tdata.theatre_name }}</h3>
           <p style="color: var(--text-muted); font-size: 0.85rem;">📍 {{ tdata.location }}</p>
@@ -79,10 +119,20 @@
 
   <!-- Reviews Preview -->
   <div>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-      <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary);">💬 Audience Reviews ({{ total_reviews }})</h2>
-      {% if current_user %}
-        <a href="{{ url_for('review.submit_review', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm">+ Add Review</a>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary);">💬 Audience Reviews ({{ total_reviews }})</h2>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Verified cinema viewers who watched {{ movie.title }}</span>
+      </div>
+
+      {% if is_admin %}
+        <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.35); padding: 0.4rem 0.8rem; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 600;">
+          🛡️ Admin Review Disabled
+        </span>
+      {% elif can_review %}
+        <a href="{{ url_for('review.submit_review', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm">+ Add Verified Review</a>
+      {% elif current_user %}
+        <a href="#showtimes-section" class="btn btn-secondary btn-sm" title="Book tickets to unlock review">🎟️ Book Tickets to Review</a>
       {% else %}
         <a href="{{ url_for('auth.login', next=request.path) }}" class="btn btn-secondary btn-sm">🔒 Sign in to Review</a>
       {% endif %}
@@ -93,7 +143,10 @@
       {% for r in reviews[:6] %}
       <div style="background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border); padding: 1.25rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-          <span style="font-weight: 700; color: var(--text-primary);">{{ r.reviewer_name }}</span>
+          <span style="font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.4rem;">
+            {{ r.reviewer_name }}
+            <span style="font-size: 0.7rem; color: #22c55e; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); padding: 0.1rem 0.35rem; border-radius: 4px;">✓ Watched</span>
+          </span>
           <span style="color: var(--primary); font-weight: 700;">★ {{ r.rating }}/5</span>
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem;">
@@ -110,9 +163,102 @@
       {% endfor %}
     </div>
     {% else %}
-    <p style="color: var(--text-muted);">Be the first person to review this movie!</p>
+    <p style="color: var(--text-muted);">Be the first person to review this movie after booking your tickets!</p>
     {% endif %}
   </div>
 
+  <!-- Bottom Page Sequence Navigation -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 1rem;">
+    <a href="{{ url_for('movie.catalog') }}" class="btn btn-secondary">
+      &larr; Previous: Movie Catalog
+    </a>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="{{ url_for('review.sentiment_analysis', movie_id=movie.movie_id) }}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+        <span>📊</span> <span>Next: AI Sentiment Analysis</span> <span>&rarr;</span>
+      </a>
+      <a href="#showtimes-section" class="btn btn-primary" style="padding: 0.8rem 2rem;">
+        Next: Book Tickets for {{ movie.title }} &rarr;
+      </a>
+    </div>
+  </div>
+
 </div>
+
+<!-- Cinematic Trailer Modal -->
+<div id="trailerModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 9999; align-items: center; justify-content: center; padding: 1.5rem;">
+  <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); width: 100%; max-width: 860px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); position: relative;">
+    <div style="padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: var(--bg-main);">
+      <h3 id="trailerModalTitle" style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+        <span>🎬</span> Official Trailer
+      </h3>
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <a id="trailerExternalLink" href="#" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.35rem 0.7rem;">Open in YouTube ↗</a>
+        <button onclick="closeTrailerModal()" style="background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; line-height: 1; padding: 0.1rem 0.5rem;" title="Close Modal">&times;</button>
+      </div>
+    </div>
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; background: #000;">
+      <iframe id="trailerIframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function parseYouTubeEmbedUrl(url) {
+    if (!url) return '';
+    if (url.includes('embed/')) return url;
+    
+    // Match watch?v=ID or youtu.be/ID
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    if (match && match[2].length === 11) {
+      return `https://www.youtube.com/embed/${match[2]}?autoplay=1&rel=0`;
+    }
+    return url;
+  }
+
+  function openTrailerModal(trailerUrl, movieTitle) {
+    const modal = document.getElementById('trailerModal');
+    const iframe = document.getElementById('trailerIframe');
+    const titleElem = document.getElementById('trailerModalTitle');
+    const externalLink = document.getElementById('trailerExternalLink');
+
+    if (!modal || !iframe) return;
+
+    titleElem.innerHTML = `<span>🎬</span> ${movieTitle || 'Movie'} — Official Trailer`;
+    externalLink.href = trailerUrl;
+
+    const embedUrl = parseYouTubeEmbedUrl(trailerUrl);
+    iframe.src = embedUrl;
+
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeTrailerModal() {
+    const modal = document.getElementById('trailerModal');
+    const iframe = document.getElementById('trailerIframe');
+    if (!modal || !iframe) return;
+
+    iframe.src = ''; // Stop video playback
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  // Close modal when clicking outside
+  document.addEventListener('click', (e) => {
+    const modal = document.getElementById('trailerModal');
+    if (modal && e.target === modal) {
+      closeTrailerModal();
+    }
+  });
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeTrailerModal();
+    }
+  });
+</script>
 {% endblock %}

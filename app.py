@@ -118,11 +118,17 @@ def create_app():
 app = create_app()
 
 if __name__ == '__main__':
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    use_reloader = os.environ.get('FLASK_USE_RELOADER', '0').lower() in ('1', 'true', 'yes')
+    debug_mode = os.environ.get('FLASK_DEBUG', '1').lower() in ('1', 'true', 'yes')
+
     print("\n" + "="*60)
     print(" SMART CINEMA TICKET HUB — Starting Local Server")
     print("="*60)
     is_db_up, db_msg = check_db_health()
-    print(f" * MongoDB Database Status: {db_msg}")
-    print(" * Application running at: http://127.0.0.1:5000")
+    print(f" * Database Status: {db_msg}")
+    print(f" * Localhost URL:   http://127.0.0.1:{port}")
+    print(f" * Alternative URL: http://localhost:{port}")
     print("="*60 + "\n")
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=debug_mode, use_reloader=use_reloader)

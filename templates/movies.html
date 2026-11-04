@@ -1,12 +1,25 @@
 {% extends 'base.html' %}
-{% block title %}Browse Catalog — Smart Cinema Ticket Hub{% endblock %}
+{% block title %}Browse Movie Catalog — Smart Cinema Ticket Hub{% endblock %}
 
 {% block content %}
 <div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
   
+  <!-- Page Sequence Navigation Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; padding: 0.75rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);">
+    <a href="{{ url_for('movie.index') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+      <span>←</span> <span>Previous: Back to Home</span>
+    </a>
+    <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+      Movie Selection &bull; Step 1: Pick Movie &bull; Step 2: Showtimes &bull; Step 3: Balcony/Seats
+    </div>
+    <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--primary); font-weight: 700; border-color: rgba(245, 158, 11, 0.45);">
+      <span>📍</span> <span>Next: Browse Theatres Near You</span> <span>→</span>
+    </a>
+  </div>
+
   <div style="margin-bottom: 2rem;">
     <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text-primary);">Explore Movies</h1>
-    <p style="color: var(--text-muted);">Search and filter across genres, languages, and theatres</p>
+    <p style="color: var(--text-muted);">Search and filter across genres, languages, and theatres with upper balcony recliners</p>
   </div>
 
   <!-- Search & Filter Form -->
@@ -55,7 +68,7 @@
 
   <!-- Movies Grid -->
   {% if movies %}
-  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.75rem;">
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.75rem; margin-bottom: 2.5rem;">
     {% for movie in movies %}
     <div class="movie-card" style="background: var(--bg-card); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column;">
       <div style="position: relative; height: 320px; background: var(--bg-subtle);">
@@ -69,16 +82,35 @@
           <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-primary);">{{ movie.title }}</h3>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">{{ movie.genre }} &bull; {{ movie.language }} &bull; {{ movie.duration }} min</p>
         </div>
-        <div style="display: flex; gap: 0.5rem;">
-          <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm" style="flex: 1;">Showtimes</a>
+        <div style="display: flex; gap: 0.4rem;">
+          <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm" style="flex: 1;">Showtimes &rarr;</a>
+          {% if movie.trailer %}
+            <a href="{{ movie.trailer }}" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.4rem 0.65rem; color: #fb7185; border-color: rgba(225, 29, 72, 0.35);" title="Watch Trailer">▶</a>
+          {% endif %}
           <a href="{{ url_for('review.sentiment_analysis', movie_id=movie.movie_id) }}" class="btn btn-secondary btn-sm" title="AI Review Analysis">📊</a>
         </div>
       </div>
     </div>
     {% endfor %}
   </div>
+
+  <!-- Bottom Page Sequence Navigation & Pagination -->
+  <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <a href="{{ url_for('movie.index') }}" class="btn btn-secondary">
+      &larr; Previous: Back to Home
+    </a>
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <span class="btn btn-secondary btn-sm" style="opacity: 0.6; cursor: not-allowed;">&larr; Previous Page</span>
+      <span style="font-size: 0.85rem; color: var(--text-muted); padding: 0 0.5rem; font-weight: 600;">Page 1 of 1 ({{ movies|length }} Movies)</span>
+      <span class="btn btn-secondary btn-sm" style="opacity: 0.6; cursor: not-allowed;">Next Page &rarr;</span>
+    </div>
+    <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-primary" style="padding: 0.8rem 1.8rem;">
+      Next: Browse Theatres Near You &rarr;
+    </a>
+  </div>
+
   {% else %}
-  <div style="text-align: center; padding: 4rem 1rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+  <div style="text-align: center; padding: 4rem 1rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); margin-bottom: 2.5rem;">
     <p style="font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 1rem;">No movies found matching your filters.</p>
     <a href="{{ url_for('movie.catalog') }}" class="btn btn-secondary">Clear Filters</a>
   </div>

@@ -3,6 +3,53 @@
 
 {% block content %}
 <div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
+  <!-- Admin Sequential Workflow Progress Wizard -->
+  <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 1.25rem 1.75rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+      <span style="font-size: 0.82rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">
+        ⚙️ Admin Guided Operations Sequence:
+      </span>
+      <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">Sequential Management Flow</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.75rem;">
+      <a href="{{ url_for('admin.manage_theatres') }}" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); text-decoration: none; color: var(--text-primary); transition: all 0.2s;">
+        <span style="font-size: 1.2rem;">🏢</span>
+        <div>
+          <strong style="font-size: 0.85rem; display: block;">1. Theatres</strong>
+          <span style="font-size: 0.72rem; color: var(--text-muted);">Locations & Venues &rarr;</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin.manage_screens') }}" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); text-decoration: none; color: var(--text-primary); transition: all 0.2s;">
+        <span style="font-size: 1.2rem;">💺</span>
+        <div>
+          <strong style="font-size: 0.85rem; display: block;">2. Screens & Seats</strong>
+          <span style="font-size: 0.72rem; color: var(--primary); font-weight: 700;">Balcony & Varying &rarr;</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin.manage_movies') }}" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); text-decoration: none; color: var(--text-primary); transition: all 0.2s;">
+        <span style="font-size: 1.2rem;">🎬</span>
+        <div>
+          <strong style="font-size: 0.85rem; display: block;">3. Movies</strong>
+          <span style="font-size: 0.72rem; color: var(--text-muted);">Posters & Trailers &rarr;</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin.manage_shows') }}" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); text-decoration: none; color: var(--text-primary); transition: all 0.2s;">
+        <span style="font-size: 1.2rem;">📅</span>
+        <div>
+          <strong style="font-size: 0.85rem; display: block;">4. Schedule Shows</strong>
+          <span style="font-size: 0.72rem; color: var(--text-muted);">Daily Showtimes &rarr;</span>
+        </div>
+      </a>
+      <a href="{{ url_for('admin.manage_bookings') }}" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); text-decoration: none; color: var(--text-primary); transition: all 0.2s;">
+        <span style="font-size: 1.2rem;">🎟️</span>
+        <div>
+          <strong style="font-size: 0.85rem; display: block;">5. Bookings & Reports</strong>
+          <span style="font-size: 0.72rem; color: var(--text-muted);">Tickets & Revenue &rarr;</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
   
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
     <div>

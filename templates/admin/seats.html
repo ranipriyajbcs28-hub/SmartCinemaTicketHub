@@ -1,59 +1,421 @@
 {% extends 'base.html' %}
-{% block title %}Screen Seats — {{ screen.screen_name }}{% endblock %}
+{% block title %}Screen Seats Layout — {{ screen.screen_name }}{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 1000px; margin: 2rem auto; padding: 0 1.5rem;">
-  <div style="margin-bottom: 2rem;">
-    <a href="{{ url_for('admin.manage_screens') }}" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Back to Screens</a>
-    <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-top: 0.25rem;">{{ screen.screen_name }} — Seat Layout</h1>
-    <p style="color: var(--text-muted); font-size: 0.95rem;">📍 {{ screen.theatre_name }} &bull; Total Capacity: {{ screen.total_seats }} seats</p>
+<div class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem;">
+
+  <!-- Page Sequence Navigation Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; padding: 0.75rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);">
+    <a href="{{ url_for('admin.manage_screens') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+      <span>←</span> <span>Previous: Back to Screens</span>
+    </a>
+    <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+      Step 2 of Admin Workflow: Seat Allocation & Tier Geometry
+    </div>
+    <a href="{{ url_for('admin.manage_shows') }}" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+      <span>Next: Schedule Shows for Screen</span> <span>→</span>
+    </a>
   </div>
 
-  <!-- Tier Summary Badges -->
-  <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
-    <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
-      <span style="font-size: 1.4rem;">👑</span>
+  <!-- Header & Non-Grid Reviewer Architecture Notice -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); padding: 1.75rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.25rem;">
       <div>
-        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">Balcony Tier</span>
-        <strong style="color: var(--primary); font-size: 1.2rem;">{{ seats|selectattr('seat_type', 'equalto', 'Balcony')|list|length }} seats</strong>
+        <div style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.85rem; background: rgba(34, 197, 94, 0.12); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 9999px; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.75rem;">
+          ✓ Non-Grid Architecture Active &bull; Realistic Row-by-Row Varying Geometry & Upper Balcony
+        </div>
+        <h1 style="font-size: 2.1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.35rem;">
+          {{ screen.screen_name }} — Physical Seating Plan
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+          📍 {{ screen.theatre_name }} &bull; Total Auditorium Capacity: <strong style="color: var(--primary);">{{ total_seats }} seats</strong>
+        </p>
+      </div>
+
+      <!-- Quick Action Profiles -->
+      <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;">
+        <button type="button" onclick="document.getElementById('profileModal').style.display='flex'" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+          <span>⚡</span> Apply Varying Profile
+        </button>
+        <button type="button" onclick="document.getElementById('addRowModal').style.display='flex'" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+          <span>+</span> Add Custom Row
+        </button>
       </div>
     </div>
 
-    <div style="background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.35); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
-      <span style="font-size: 1.4rem;">⭐</span>
-      <div>
-        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">Premium Tier</span>
-        <strong style="color: var(--accent-purple); font-size: 1.2rem;">{{ seats|selectattr('seat_type', 'equalto', 'Premium')|list|length }} seats</strong>
+    <!-- Row Variation Proof Indicator -->
+    <div style="margin-top: 1.25rem; padding: 0.85rem 1.25rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+      <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+        <span style="font-size: 0.82rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">
+          Row Lengths:
+        </span>
+        {% for r_char, count in row_counts.items() %}
+          <span style="font-size: 0.82rem; font-weight: 700; background: var(--bg-card); border: 1px solid var(--border); padding: 0.2rem 0.55rem; border-radius: 6px; color: var(--text-primary);">
+            Row {{ r_char }}: <strong style="color: var(--primary);">{{ count }} seats</strong>
+          </span>
+        {% endfor %}
       </div>
-    </div>
-
-    <div style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
-      <span style="font-size: 1.4rem;">🎫</span>
-      <div>
-        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">Regular Tier</span>
-        <strong style="color: var(--info); font-size: 1.2rem;">{{ seats|selectattr('seat_type', 'equalto', 'Regular')|list|length }} seats</strong>
+      <div style="font-size: 0.8rem; font-weight: 700; color: #22c55e;">
+        {% if is_varying %}
+          ✓ Seats vary from row to row (Realistic theatre curvature)
+        {% else %}
+          Row capacity uniform
+        {% endif %}
       </div>
     </div>
   </div>
 
-  <div style="background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 1.75rem;">
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap: 0.75rem;">
-      {% for s in seats %}
-      <div style="background: var(--bg-main); border: 1px solid 
-            {% if s.seat_type == 'Balcony' %}rgba(245, 158, 11, 0.5); box-shadow: 0 0 10px rgba(245, 158, 11, 0.15)
-            {% elif s.seat_type == 'Premium' %}rgba(139, 92, 246, 0.5)
-            {% else %}var(--border){% endif %}; 
-            border-radius: 6px; padding: 0.65rem; text-align: center;">
-        <span style="font-weight: 700; font-size: 1rem; color: var(--text-primary); display: block;">{{ s.seat_number }}</span>
-        <span style="font-size: 0.75rem; font-weight: 700;
-              color: {% if s.seat_type == 'Balcony' %}var(--primary)
-                     {% elif s.seat_type == 'Premium' %}var(--accent-purple)
-                     {% else %}var(--info){% endif %};">
-          {{ s.seat_type }}
+  <!-- Capacity Breakdown Summary Cards -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+    <!-- Balcony Card -->
+    <div style="background: var(--bg-card); border: 1.5px solid rgba(245, 158, 11, 0.4); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.08);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <span style="font-size: 1.4rem;">👑</span>
+        <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 800; color: var(--primary); letter-spacing: 0.5px;">Upper Balcony Tier</span>
+      </div>
+      <div style="font-size: 1.85rem; font-weight: 800; color: var(--text-primary);">{{ balcony_count }} <span style="font-size: 0.95rem; font-weight: 500; color: var(--text-muted);">seats</span></div>
+      <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">
+        Elevated mezzanine luxury recliners &bull; +50% Premium
+      </span>
+    </div>
+
+    <!-- Premium Card -->
+    <div style="background: var(--bg-card); border: 1.5px solid rgba(139, 92, 246, 0.4); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.08);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <span style="font-size: 1.4rem;">⭐</span>
+        <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 800; color: var(--accent-purple); letter-spacing: 0.5px;">Prime Premium Tier</span>
+      </div>
+      <div style="font-size: 1.85rem; font-weight: 800; color: var(--text-primary);">{{ premium_count }} <span style="font-size: 0.95rem; font-weight: 500; color: var(--text-muted);">seats</span></div>
+      <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">
+        Optimal center acoustic field &bull; +25% Standard
+      </span>
+    </div>
+
+    <!-- Regular Card -->
+    <div style="background: var(--bg-card); border: 1.5px solid rgba(59, 130, 246, 0.4); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <span style="font-size: 1.4rem;">🎫</span>
+        <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 800; color: var(--info); letter-spacing: 0.5px;">Stalls / Regular Tier</span>
+      </div>
+      <div style="font-size: 1.85rem; font-weight: 800; color: var(--text-primary);">{{ regular_count }} <span style="font-size: 0.95rem; font-weight: 500; color: var(--text-muted);">seats</span></div>
+      <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">
+        Lower auditorium stalls &bull; Base Ticket Price
+      </span>
+    </div>
+  </div>
+
+  <!-- Physical Seating Layout Map -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); padding: 2.5rem 1.5rem; margin-bottom: 2.5rem;">
+    
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.35rem;">
+        Auditorium Physical Seating Architecture
+      </h2>
+      <p style="font-size: 0.88rem; color: var(--text-muted);">
+        Interactive layout: Click any seat to change status or use row controls to add/remove seats dynamically.
+      </p>
+    </div>
+
+    <!-- Seating Tiers Container -->
+    <div style="display: flex; flex-direction: column; gap: 2.5rem; max-width: 950px; margin: 0 auto;">
+
+      {% if tiers_dict %}
+        {% for tier_name, tier_rows in tiers_dict.items() %}
+          
+          {% if tier_name == 'Premium' and 'Balcony' in tiers_dict %}
+            <!-- Balcony Railing Graphic Divider -->
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; margin: 0.5rem 0;">
+              <div style="width: 100%; height: 3px; background: linear-gradient(90deg, transparent, #f59e0b, var(--primary), #f59e0b, transparent); border-radius: 9999px;"></div>
+              <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 1rem; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 9999px; font-size: 0.75rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px;">
+                <span>👑</span> <span>Upper Balcony Level Railing & Mezzanine Overlook</span> <span>👑</span>
+              </div>
+            </div>
+          {% endif %}
+
+          <div style="background: var(--bg-main); border: 1.5px solid 
+                {% if tier_name == 'Balcony' %}rgba(245, 158, 11, 0.4); box-shadow: 0 0 20px rgba(245, 158, 11, 0.08)
+                {% elif tier_name == 'Premium' %}rgba(139, 92, 246, 0.4)
+                {% else %}rgba(59, 130, 246, 0.3){% endif %};
+                border-radius: var(--radius-lg); padding: 1.75rem 1.25rem;">
+
+            <!-- Section Title Bar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span style="font-size: 1.3rem;">
+                  {% if tier_name == 'Balcony' %}👑{% elif tier_name == 'Premium' %}⭐{% else %}🎫{% endif %}
+                </span>
+                <span style="font-weight: 800; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.5px;
+                      color: {% if tier_name == 'Balcony' %}var(--primary)
+                             {% elif tier_name == 'Premium' %}var(--accent-purple)
+                             {% else %}var(--info){% endif %};">
+                  {{ tier_name }} Seating Section
+                </span>
+              </div>
+              <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); background: var(--bg-card); border: 1px solid var(--border); padding: 0.25rem 0.75rem; border-radius: 9999px;">
+                {{ tier_rows|length }} Rows &bull; {{ tier_rows.values()|map('length')|sum }} Total Seats
+              </span>
+            </div>
+
+            <!-- Tier Rows (Centered, Varying Lengths) -->
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              {% for row_letter, r_seats in tier_rows.items() %}
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; background: var(--bg-card); padding: 0.6rem 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                
+                <!-- Row Left Info -->
+                <div style="display: flex; align-items: center; gap: 0.5rem; min-width: 100px;">
+                  <span style="width: 28px; height: 28px; background: var(--bg-main); border: 1px solid var(--border); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; color: var(--text-primary);">
+                    {{ row_letter }}
+                  </span>
+                  <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">
+                    ({{ r_seats|length }} seats)
+                  </span>
+                </div>
+
+                <!-- Physical Seat Chips -->
+                <div style="display: flex; gap: 0.45rem; align-items: center; justify-content: center; flex-wrap: wrap; flex: 1;">
+                  {% for s in r_seats %}
+                  <div onclick="openSeatModal('{{ s.seat_id }}', '{{ s.seat_number }}', '{{ s.seat_type }}', '{{ s.status }}')"
+                       title="Seat {{ s.seat_number }} &bull; {{ s.seat_type }} &bull; {{ s.status }} (Click to manage)"
+                       style="min-width: 36px; height: 36px; padding: 0 0.35rem; border-radius: 6px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: transform 0.15s;
+                              {% if s.status != 'ACTIVE' %}
+                                background: #fee2e2; border: 1.5px dashed #ef4444; color: #dc2626;
+                              {% elif s.seat_type == 'Balcony' %}
+                                background: #fffbeb; border: 1.5px solid #f59e0b; color: #b45309; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.12);
+                              {% elif s.seat_type == 'Premium' %}
+                                background: #f5f3ff; border: 1.5px solid #8b5cf6; color: #6d28d9;
+                              {% else %}
+                                background: #f8fafc; border: 1.5px solid #cbd5e1; color: var(--text-primary);
+                              {% endif %}">
+                    <span>{{ s.seat_number }}</span>
+                    {% if s.status != 'ACTIVE' %}
+                      <span style="font-size: 0.55rem; line-height: 1; text-transform: uppercase;">Mnt</span>
+                    {% endif %}
+                  </div>
+                  {% endfor %}
+                </div>
+
+                <!-- Row Quick Actions (+ / -) -->
+                <div style="display: flex; gap: 0.3rem; align-items: center;">
+                  <!-- Add Seat Form -->
+                  <form method="POST" action="{{ url_for('admin.add_seat_to_row', screen_id=screen.screen_id) }}" style="display: inline;">
+                    <input type="hidden" name="row_letter" value="{{ row_letter }}">
+                    <input type="hidden" name="seat_type" value="{{ tier_name }}">
+                    <button type="submit" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 700;" title="Add seat to this row (Vary row length)">
+                      + Seat
+                    </button>
+                  </form>
+
+                  <!-- Remove Seat Form -->
+                  <form method="POST" action="{{ url_for('admin.remove_seat_from_row', screen_id=screen.screen_id) }}" onsubmit="return confirm('Remove last seat from Row {{ row_letter }}?');" style="display: inline;">
+                    <input type="hidden" name="row_letter" value="{{ row_letter }}">
+                    <button type="submit" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; color: #ef4444;" title="Remove last seat from this row">
+                      -
+                    </button>
+                  </form>
+                </div>
+
+              </div>
+              {% endfor %}
+            </div>
+
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Cinema Curved Screen Visual -->
+      <div style="margin-top: 1rem; text-align: center;">
+        <div style="height: 8px; max-width: 650px; margin: 0 auto; background: linear-gradient(90deg, transparent, var(--primary), transparent); border-radius: 9999px; box-shadow: 0 0 20px var(--primary);"></div>
+        <p style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin-top: 0.6rem; font-weight: 700;">
+          CINEMA SCREEN &bull; AUDITORIUM FRONT
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Legend -->
+    <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 2.5rem; font-size: 0.85rem; color: var(--text-secondary); flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <div style="width: 18px; height: 18px; background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 4px;"></div>
+        <span>👑 Upper Balcony</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <div style="width: 18px; height: 18px; background: #f5f3ff; border: 1.5px solid #8b5cf6; border-radius: 4px;"></div>
+        <span>⭐ Prime Premium</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <div style="width: 18px; height: 18px; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 4px;"></div>
+        <span>🎫 Stalls / Regular</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <div style="width: 18px; height: 18px; background: #fee2e2; border: 1.5px dashed #ef4444; border-radius: 4px;"></div>
+        <span>Maintenance / Inactive</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Page Sequence Navigation -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 1rem;">
+    <a href="{{ url_for('admin.manage_screens') }}" class="btn btn-secondary">
+      &larr; Previous: Manage Screens
+    </a>
+    <a href="{{ url_for('admin.manage_shows') }}" class="btn btn-primary" style="padding: 0.8rem 2rem;">
+      Next: Schedule Cinema Shows &rarr;
+    </a>
+  </div>
+
+</div>
+
+<!-- Modal 1: Add Custom Row -->
+<div id="addRowModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); z-index: 9999; align-items: center; justify-content: center; padding: 1.5rem;">
+  <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); width: 100%; max-width: 480px; padding: 2rem; box-shadow: var(--shadow-lg);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text-primary);">+ Add Custom Row</h3>
+      <button onclick="document.getElementById('addRowModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer;">&times;</button>
+    </div>
+    
+    <form method="POST" action="{{ url_for('admin.add_screen_row', screen_id=screen.screen_id) }}" style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem; font-weight: 600;">Row Letter (e.g. {{ next_row_letter }}) *</label>
+        <input type="text" name="row_letter" value="{{ next_row_letter }}" maxlength="1" required style="width: 100%; padding: 0.7rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 700; text-transform: uppercase;">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem; font-weight: 600;">Seating Tier *</label>
+        <select name="seat_type" required style="width: 100%; padding: 0.7rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 600;">
+          <option value="Balcony">👑 Balcony (Upper Mezzanine Recliners)</option>
+          <option value="Premium">⭐ Premium (Prime Viewing Angle)</option>
+          <option value="Regular" selected>🎫 Regular (Standard Stalls)</option>
+        </select>
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem; font-weight: 600;">Number of Seats in this Row (Vary row length) *</label>
+        <input type="number" name="seat_count" value="12" min="1" max="30" required style="width: 100%; padding: 0.7rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 700;">
+        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">
+          Specify any number of seats (e.g. 8 for balcony, 14 for stalls) so the layout varies from row to row.
         </span>
       </div>
-      {% endfor %}
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem;">
+        <button type="button" onclick="document.getElementById('addRowModal').style.display='none'" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Row to Screen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 2: Apply Realistic Profile -->
+<div id="profileModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); z-index: 9999; align-items: center; justify-content: center; padding: 1.5rem;">
+  <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); width: 100%; max-width: 520px; padding: 2rem; box-shadow: var(--shadow-lg);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text-primary);">⚡ Apply Realistic Seating Profile</h3>
+      <button onclick="document.getElementById('profileModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer;">&times;</button>
+    </div>
+    
+    <form method="POST" action="{{ url_for('admin.apply_seat_profile', screen_id=screen.screen_id) }}" style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">
+        Instantly configure this auditorium with real-world non-grid architecture where rows naturally vary in length and include an upper Balcony tier:
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <label style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer;">
+          <input type="radio" name="profile" value="varying_cinematic" checked style="margin-top: 0.25rem; accent-color: var(--primary);">
+          <div>
+            <strong style="color: var(--text-primary); font-size: 0.95rem; display: block;">Grand Cineplex (86 Seats)</strong>
+            <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">
+              Balcony: Rows A(8), B(10) &bull; Premium: Rows C(12), D(14) &bull; Regular: Rows E(16), F(14), G(12)
+            </span>
+          </div>
+        </label>
+
+        <label style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer;">
+          <input type="radio" name="profile" value="varying_boutique" style="margin-top: 0.25rem; accent-color: var(--primary);">
+          <div>
+            <strong style="color: var(--text-primary); font-size: 0.95rem; display: block;">Boutique Audi (24 Seats)</strong>
+            <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">
+              Balcony: Row A(6) &bull; Premium: Row B(8) &bull; Regular: Row C(10)
+            </span>
+          </div>
+        </label>
+
+        <label style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer;">
+          <input type="radio" name="profile" value="varying_imax" style="margin-top: 0.25rem; accent-color: var(--primary);">
+          <div>
+            <strong style="color: var(--text-primary); font-size: 0.95rem; display: block;">IMAX Amphitheatre (110 Seats)</strong>
+            <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">
+              Balcony: Rows A(10), B(12) &bull; Premium: Rows C(16), D(18) &bull; Regular: Rows E(20), F(18), G(16)
+            </span>
+          </div>
+        </label>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem;">
+        <button type="button" onclick="document.getElementById('profileModal').style.display='none'" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Apply Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 3: Seat Management (Click on individual seat) -->
+<div id="seatModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); z-index: 9999; align-items: center; justify-content: center; padding: 1.5rem;">
+  <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); width: 100%; max-width: 420px; padding: 2rem; box-shadow: var(--shadow-lg);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h3 id="seatModalTitle" style="font-size: 1.3rem; font-weight: 800; color: var(--text-primary);">Seat Details</h3>
+      <button onclick="document.getElementById('seatModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer;">&times;</button>
+    </div>
+
+    <div style="background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+        <span style="color: var(--text-muted); font-size: 0.85rem;">Seat Number:</span>
+        <strong id="seatModalNum" style="color: var(--text-primary); font-size: 1.1rem;">-</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+        <span style="color: var(--text-muted); font-size: 0.85rem;">Tier:</span>
+        <span id="seatModalTier" style="font-weight: 700;">-</span>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--text-muted); font-size: 0.85rem;">Operational Status:</span>
+        <span id="seatModalStatus" style="font-weight: 700;">-</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+      <!-- Toggle Status Form -->
+      <form id="toggleStatusForm" method="POST" action="">
+        <button type="submit" class="btn btn-secondary" style="width: 100%;">
+          🔄 Toggle Maintenance / Active Status
+        </button>
+      </form>
+
+      <!-- Delete Seat Form -->
+      <form id="deleteSeatForm" method="POST" action="" onsubmit="return confirm('Permanently remove this seat from auditorium?');">
+        <button type="submit" class="btn btn-danger" style="width: 100%;">
+          🗑 Delete This Seat
+        </button>
+      </form>
     </div>
   </div>
 </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function openSeatModal(seatId, seatNumber, seatType, status) {
+    document.getElementById('seatModalNum').textContent = seatNumber;
+    document.getElementById('seatModalTier').textContent = seatType;
+    document.getElementById('seatModalStatus').textContent = status;
+    document.getElementById('seatModalTitle').textContent = `Seat ${seatNumber}`;
+
+    const toggleForm = document.getElementById('toggleStatusForm');
+    toggleForm.action = `/admin/seats/{{ screen.screen_id }}/toggle-seat-status/${seatId}`;
+
+    const delForm = document.getElementById('deleteSeatForm');
+    delForm.action = `/admin/seats/{{ screen.screen_id }}/delete-seat/${seatId}`;
+
+    document.getElementById('seatModal').style.display = 'flex';
+  }
+</script>
 {% endblock %}

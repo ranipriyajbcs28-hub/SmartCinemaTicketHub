@@ -3,6 +3,19 @@
 
 {% block content %}
 <div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
+  <!-- Page Sequence Navigation Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; padding: 0.75rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);">
+    <a href="{{ url_for('admin.manage_shows') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+      <span>←</span> <span>Previous: Scheduled Shows</span>
+    </a>
+    <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+      Step 5 of Admin Sequence: Customer Reservations & Financial Overview
+    </div>
+    <a href="{{ url_for('report.reports_dashboard') }}" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+      <span>Next: Revenue & ML Reports</span> <span>→</span>
+    </a>
+  </div>
+
 
   <div
     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
@@ -64,6 +77,16 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
+
+  <!-- Bottom Page Sequence Navigation -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 1rem;">
+    <a href="{{ url_for('admin.manage_shows') }}" class="btn btn-secondary">
+      &larr; Previous: Scheduled Shows
+    </a>
+    <a href="{{ url_for('report.reports_dashboard') }}" class="btn btn-primary" style="padding: 0.8rem 2rem;">
+      Next: Revenue & Sentiment Reports &rarr;
+    </a>
   </div>
 
 </div>

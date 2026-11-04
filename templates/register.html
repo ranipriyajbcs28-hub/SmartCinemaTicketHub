@@ -1,11 +1,22 @@
 {% extends 'base.html' %}
-{% block title %}Register — Smart Cinema Ticket Hub{% endblock %}
+{% block title %}Register Account — Smart Cinema Ticket Hub{% endblock %}
 
 {% block content %}
-<div style="max-width: 500px; margin: 3rem auto; padding: 2.5rem; background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); box-shadow: var(--shadow-lg);">
-  <div style="text-align: center; margin-bottom: 2rem;">
-    <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">Create Account</h1>
-    <p style="color: var(--text-muted); font-size: 0.95rem;">Join CinemaHub to book movies and post AI-analyzed reviews</p>
+<div style="max-width: 520px; margin: 2rem auto; padding: 2.25rem; background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); box-shadow: var(--shadow-lg);">
+  
+  <!-- Page Sequence Navigation Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+    <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem;">
+      <span>←</span> <span>Previous: Back to Sign In</span>
+    </a>
+    <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem;">
+      <span>Explore Theatres</span> <span>→</span>
+    </a>
+  </div>
+
+  <div style="text-align: center; margin-bottom: 1.75rem;">
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.4rem;">Create Customer Account</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Join CinemaHub to book balcony recliners and post verified reviews</p>
   </div>
 
   <form method="POST" action="{{ url_for('auth.register') }}" style="display: flex; flex-direction: column; gap: 1.1rem;">
@@ -34,11 +45,13 @@
       <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-enter password" style="width: 100%; padding: 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); font-size: 0.95rem;">
     </div>
 
-    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.8rem; margin-top: 0.5rem; font-size: 1rem;">Register Account</button>
+    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; margin-top: 0.5rem; font-size: 1rem; font-weight: 700;">
+      Register Account & Start Booking &rarr;
+    </button>
   </form>
 
   <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-top: 1.5rem;">
-    Already registered? <a href="{{ url_for('auth.login') }}" style="color: var(--primary); font-weight: 600; text-decoration: none;">Sign in here</a>
+    Already registered? <a href="{{ url_for('auth.login') }}" style="color: var(--primary); font-weight: 700; text-decoration: none;">Sign in here &rarr;</a>
   </p>
 </div>
 {% endblock %}

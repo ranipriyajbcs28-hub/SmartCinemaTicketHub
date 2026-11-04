@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
-from database.db import query_one, execute, execute_returning_id
+from database.db import query_all, query_one, execute, execute_returning_id
 from utils.validators import is_valid_email, is_valid_password, is_valid_phone
 from utils.auth import login_user, logout_user, login_required, get_current_user
 
@@ -82,14 +82,19 @@ def login():
         return redirect(url_for('movie.index'))
 
     next_url = request.args.get('next')
+    
+    # Fetch all available cinema theatre locations for the location selector
+    loc_rows = query_all("SELECT DISTINCT location FROM THEATRES ORDER BY location")
+    locations = [r['location'] for r in loc_rows if r.get('location')]
 
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
+        selected_location = request.form.get('location', '').strip()
 
         if not email or not password:
             flash("Please enter both email and password.", "danger")
-            return render_template('login.html', email=email)
+            return render_template('login.html', email=email, locations=locations, selected_location=selected_location)
 
         user = query_one("""
             SELECT user_id, name, email, password, phone, role 
@@ -99,17 +104,28 @@ def login():
 
         if not user or not check_password_hash(user['password'], password):
             flash("Invalid email or password. Please try again.", "danger")
-            return render_template('login.html', email=email)
+            return render_template('login.html', email=email, locations=locations, selected_location=selected_location)
 
         # Login successful
         login_user(user)
-        flash(f"Welcome back, {user['name']}!", "success")
+
+        # Save selected preferred location in customer session
+        if selected_location:
+            session['selected_location'] = selected_location
 
         if user['role'] == 'ADMIN':
+            flash(f"Welcome to Admin Portal, {user['name']}!", "success")
             return redirect(next_url or url_for('admin.dashboard'))
-        return redirect(next_url or url_for('movie.index'))
+        
+        # Customer login: direct sequence to browse theatres near selected location
+        if selected_location:
+            flash(f"Welcome back, {user['name']}! Showing cinema theatres near {selected_location}.", "success")
+            return redirect(next_url or url_for('movie.browse_theatres', location=selected_location))
+        else:
+            flash(f"Welcome back, {user['name']}! Explore theatres and movies near you.", "success")
+            return redirect(next_url or url_for('movie.browse_theatres'))
 
-    return render_template('login.html')
+    return render_template('login.html', locations=locations, selected_location=session.get('selected_location', ''))
 
 @auth_bp.route('/logout')
 def logout():

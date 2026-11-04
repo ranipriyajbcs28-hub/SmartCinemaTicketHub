@@ -29,16 +29,67 @@ def save_uploaded_poster(file_obj):
         return f"/static/images/posters/{unique_name}"
     return None
 
-def auto_generate_screen_seats(screen_id, balcony_seats=20, premium_seats=30, regular_seats=50, seats_per_row=10):
+def auto_generate_screen_seats(screen_id, row_specs=None, layout_preset='varying_cinematic', balcony_seats=20, premium_seats=30, regular_seats=50, seats_per_row=10):
     """
-    Generates structured physical seats across distinct tiers:
-    1. Balcony Tier: Top rows (e.g., Row A, B...)
-    2. Premium Tier: Middle rows (e.g., Row C, D...)
-    3. Regular Tier: Standard rows (e.g., Row E, F, G...)
+    Generates structured physical seats across distinct tiers with realistic non-grid variation:
+    Theatres seats are NOT in a fixed grid: seat counts vary from row to row, and
+    screens feature upper Balcony tiers (luxury recliners with fewer seats per row)
+    separated from stalls below.
     """
-    row_letters = [chr(i) for i in range(ord('A'), ord('Z') + 1)] # A through Z
-    current_row_idx = 0
     total_generated = 0
+
+    # 1. Direct row specifications provided
+    if row_specs and isinstance(row_specs, list) and len(row_specs) > 0:
+        for r in row_specs:
+            row_char = str(r.get('row', 'A')).upper().strip()
+            tier = r.get('tier', 'Regular')
+            cnt = max(1, int(r.get('seats', 10)))
+            for num in range(1, cnt + 1):
+                seat_num = f"{row_char}{num}"
+                execute("""
+                    INSERT INTO SEATS (screen_id, seat_number, seat_type, status)
+                    VALUES (:sid, :num, :type, 'ACTIVE')
+                """, {'sid': screen_id, 'num': seat_num, 'type': tier})
+                total_generated += 1
+        return total_generated
+
+    # 2. Layout Presets (Varying Row Lengths with Balcony Tier)
+    if layout_preset == 'varying_cinematic':
+        specs = [
+            {'row': 'A', 'tier': 'Balcony', 'seats': 8},
+            {'row': 'B', 'tier': 'Balcony', 'seats': 10},
+            {'row': 'C', 'tier': 'Premium', 'seats': 12},
+            {'row': 'D', 'tier': 'Premium', 'seats': 14},
+            {'row': 'E', 'tier': 'Regular', 'seats': 16},
+            {'row': 'F', 'tier': 'Regular', 'seats': 14},
+            {'row': 'G', 'tier': 'Regular', 'seats': 12},
+        ]
+        return auto_generate_screen_seats(screen_id, row_specs=specs)
+
+    elif layout_preset == 'varying_boutique':
+        specs = [
+            {'row': 'A', 'tier': 'Balcony', 'seats': 6},
+            {'row': 'B', 'tier': 'Balcony', 'seats': 8},
+            {'row': 'C', 'tier': 'Premium', 'seats': 10},
+            {'row': 'D', 'tier': 'Regular', 'seats': 12},
+        ]
+        return auto_generate_screen_seats(screen_id, row_specs=specs)
+
+    elif layout_preset == 'varying_imax':
+        specs = [
+            {'row': 'A', 'tier': 'Balcony', 'seats': 10},
+            {'row': 'B', 'tier': 'Balcony', 'seats': 12},
+            {'row': 'C', 'tier': 'Premium', 'seats': 16},
+            {'row': 'D', 'tier': 'Premium', 'seats': 18},
+            {'row': 'E', 'tier': 'Regular', 'seats': 20},
+            {'row': 'F', 'tier': 'Regular', 'seats': 18},
+            {'row': 'G', 'tier': 'Regular', 'seats': 16},
+        ]
+        return auto_generate_screen_seats(screen_id, row_specs=specs)
+
+    # 3. Dynamic row calculation with varying lengths from balcony to stalls
+    row_letters = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
+    current_row_idx = 0
 
     tiers = [
         ('Balcony', max(0, balcony_seats)),
@@ -50,9 +101,16 @@ def auto_generate_screen_seats(screen_id, balcony_seats=20, premium_seats=30, re
         if seat_target <= 0:
             continue
         remaining = seat_target
+        if seat_type == 'Balcony':
+            row_cap = max(4, min(seats_per_row, 8))
+        elif seat_type == 'Premium':
+            row_cap = seats_per_row
+        else:
+            row_cap = seats_per_row + 2
+
         while remaining > 0 and current_row_idx < len(row_letters):
             row_char = row_letters[current_row_idx]
-            count_in_row = min(remaining, seats_per_row)
+            count_in_row = min(remaining, row_cap)
             for num in range(1, count_in_row + 1):
                 seat_num = f"{row_char}{num}"
                 execute("""
@@ -178,7 +236,7 @@ def manage_movies():
     movies = query_all("""
         SELECT movie_id, title, language, genre, duration,
                TO_CHAR(release_date, 'YYYY-MM-DD') as release_date_str,
-               rating, poster,
+               rating, poster, trailer,
                (SELECT COUNT(*) FROM SHOWS WHERE movie_id = MOVIES.movie_id) as show_count,
                (SELECT COUNT(*) FROM REVIEWS WHERE movie_id = MOVIES.movie_id) as review_count
         FROM MOVIES
@@ -360,12 +418,7 @@ def manage_screens():
     if request.method == 'POST':
         theatre_id = request.form.get('theatre_id')
         screen_name = request.form.get('screen_name', '').strip()
-        
-        # Support either direct seat numbers or row counts
-        balcony_input = request.form.get('balcony_seats') or request.form.get('balcony_rows')
-        premium_input = request.form.get('premium_seats') or request.form.get('premium_rows')
-        regular_input = request.form.get('regular_seats') or request.form.get('regular_rows')
-        seats_per_row_str = request.form.get('seats_per_row', '10')
+        layout_mode = request.form.get('layout_mode', 'varying_cinematic').strip()
 
         if not theatre_id or not screen_name:
             flash("Theatre venue and screen name are required.", "danger")
@@ -373,51 +426,43 @@ def manage_screens():
 
         try:
             tid = int(theatre_id)
-            # 1. Initially get number of rows and columns
-            total_rows_input = request.form.get('total_rows')
-            columns_input = request.form.get('total_columns') or request.form.get('seats_per_row', '10')
-            seats_per_row = max(1, min(30, int(columns_input))) if columns_input else 10
-            
-            if total_rows_input:
-                total_rows = max(1, min(26, int(total_rows_input)))
-                # 2. Check if Balcony seats are present
-                has_balcony = 'has_balcony' in request.form or request.form.get('has_balcony') in ['on', 'true', '1']
-                b_rows = max(0, int(request.form.get('balcony_rows', 0))) if has_balcony else 0
-                if b_rows > total_rows:
-                    b_rows = total_rows
-
-                # 3. Check if Premium seats are present
-                has_premium = 'has_premium' in request.form or request.form.get('has_premium') in ['on', 'true', '1']
-                p_rows = max(0, int(request.form.get('premium_rows', 0))) if has_premium else 0
-                if b_rows + p_rows > total_rows:
-                    p_rows = max(0, total_rows - b_rows)
-
-                # 4. Remaining rows automatically become Regular seats
-                r_rows = max(0, total_rows - b_rows - p_rows)
-
-                balcony_seats = b_rows * seats_per_row
-                premium_seats = p_rows * seats_per_row
-                regular_seats = r_rows * seats_per_row
-            elif 'balcony_rows' in request.form:
-                b_rows = max(0, int(request.form.get('balcony_rows', 0)))
-                p_rows = max(0, int(request.form.get('premium_rows', 0)))
-                r_rows = max(1, int(request.form.get('regular_rows', 4)))
-                balcony_seats = b_rows * seats_per_row
-                premium_seats = p_rows * seats_per_row
-                regular_seats = r_rows * seats_per_row
-            else:
-                balcony_seats = max(0, int(balcony_input or 0))
-                premium_seats = max(0, int(premium_input or 0))
-                regular_seats = max(0, int(regular_input or 50))
-                
         except ValueError:
-            flash("Invalid numeric format for seat configurations.", "danger")
+            flash("Invalid theatre selection.", "danger")
             return redirect(url_for('admin.manage_screens'))
 
-        total_seats = balcony_seats + premium_seats + regular_seats
-        if total_seats <= 0:
-            total_seats = 80
-            regular_seats = 80
+        row_specs = []
+        # Check if custom row builder submitted
+        if layout_mode == 'custom_rows':
+            row_chars = request.form.getlist('custom_row_char[]')
+            row_tiers = request.form.getlist('custom_row_tier[]')
+            row_seats = request.form.getlist('custom_row_seats[]')
+
+            for r_char, r_tier, r_cnt in zip(row_chars, row_tiers, row_seats):
+                if r_char and r_cnt:
+                    try:
+                        c_val = max(1, min(30, int(r_cnt)))
+                        row_specs.append({'row': r_char.upper().strip(), 'tier': r_tier or 'Regular', 'seats': c_val})
+                    except ValueError:
+                        pass
+
+        if not row_specs and layout_mode == 'custom_rows':
+            layout_mode = 'varying_cinematic'
+
+        # Estimate total seats for screen insertion
+        if row_specs:
+            total_seats = sum(r['seats'] for r in row_specs)
+        elif layout_mode == 'varying_cinematic':
+            total_seats = 86
+        elif layout_mode == 'varying_boutique':
+            total_seats = 24
+        elif layout_mode == 'varying_imax':
+            total_seats = 110
+        else:
+            # Fallback legacy grid parsing
+            b_seats = int(request.form.get('balcony_seats', 20) or 20)
+            p_seats = int(request.form.get('premium_seats', 30) or 30)
+            r_seats = int(request.form.get('regular_seats', 50) or 50)
+            total_seats = b_seats + p_seats + r_seats
 
         screen_id = execute_returning_id("""
             INSERT INTO SCREENS (theatre_id, screen_name, total_seats)
@@ -425,21 +470,32 @@ def manage_screens():
             RETURNING screen_id INTO :out_id
         """, params={'tid': tid, 'name': screen_name, 'seats': total_seats})
 
-        # Auto-generate physical seats for this screen by tiers
-        generated_count = auto_generate_screen_seats(
-            screen_id,
-            balcony_seats=balcony_seats,
-            premium_seats=premium_seats,
-            regular_seats=regular_seats,
-            seats_per_row=seats_per_row
-        )
+        # Generate non-grid varying seats with Balcony
+        if row_specs:
+            generated_count = auto_generate_screen_seats(screen_id, row_specs=row_specs)
+        elif layout_mode in ('varying_cinematic', 'varying_boutique', 'varying_imax'):
+            generated_count = auto_generate_screen_seats(screen_id, layout_preset=layout_mode)
+        else:
+            b_s = int(request.form.get('balcony_seats', 20) or 20)
+            p_s = int(request.form.get('premium_seats', 30) or 30)
+            r_s = int(request.form.get('regular_seats', 50) or 50)
+            s_p_r = int(request.form.get('seats_per_row', 10) or 10)
+            generated_count = auto_generate_screen_seats(
+                screen_id, balcony_seats=b_s, premium_seats=p_s, regular_seats=r_s, seats_per_row=s_p_r
+            )
 
-        flash(f"Screen '{screen_name}' with {generated_count} seats ({balcony_seats} Balcony, {premium_seats} Premium, {regular_seats} Regular) generated successfully!", "success")
+        # Update actual count
+        execute("UPDATE SCREENS SET total_seats = :cnt WHERE screen_id = :sid", {'cnt': generated_count, 'sid': screen_id})
+
+        flash(f"Auditorium '{screen_name}' created successfully with {generated_count} seats (varying from row to row, with Balcony tier)!", "success")
         return redirect(url_for('admin.manage_screens'))
 
     screens = query_all("""
         SELECT s.screen_id, s.screen_name, s.total_seats,
                t.theatre_id, t.theatre_name,
+               (SELECT COUNT(*) FROM SEATS WHERE screen_id = s.screen_id AND seat_type = 'Balcony') as balcony_count,
+               (SELECT COUNT(*) FROM SEATS WHERE screen_id = s.screen_id AND seat_type = 'Premium') as premium_count,
+               (SELECT COUNT(*) FROM SEATS WHERE screen_id = s.screen_id AND seat_type = 'Regular') as regular_count,
                (SELECT COUNT(*) FROM SEATS WHERE screen_id = s.screen_id) as actual_seats_count,
                (SELECT COUNT(*) FROM SHOWS WHERE screen_id = s.screen_id) as show_count
         FROM SCREENS s
@@ -463,7 +519,7 @@ def delete_screen(screen_id):
 @admin_required
 def manage_seats(screen_id):
     screen = query_one("""
-        SELECT s.screen_id, s.screen_name, s.total_seats, t.theatre_name
+        SELECT s.screen_id, s.screen_name, s.total_seats, t.theatre_id, t.theatre_name
         FROM SCREENS s
         JOIN THEATRES t ON s.theatre_id = t.theatre_id
         WHERE s.screen_id = :sid
@@ -477,10 +533,230 @@ def manage_seats(screen_id):
         SELECT seat_id, seat_number, seat_type, status
         FROM SEATS
         WHERE screen_id = :sid
-        ORDER BY seat_number ASC
     """, {'sid': screen_id})
 
-    return render_template('admin/seats.html', screen=screen, seats=seats)
+    # Natural numeric sorting: A1, A2... A9, A10...
+    def seat_sort_key(s):
+        num_str = s['seat_number']
+        row = num_str[0] if num_str else 'A'
+        digits = ''.join(filter(str.isdigit, num_str))
+        val = int(digits) if digits else 0
+        return (row, val)
+
+    seats.sort(key=seat_sort_key)
+
+    # Group seats by tier and row
+    tier_order = ['Balcony', 'Premium', 'Regular']
+    tiers_dict = {t: {} for t in tier_order}
+    row_counts = {}
+
+    for s in seats:
+        stype = s.get('seat_type', 'Regular')
+        if stype not in tiers_dict:
+            tiers_dict[stype] = {}
+        row = s['seat_number'][0] if s['seat_number'] else 'A'
+        if row not in tiers_dict[stype]:
+            tiers_dict[stype][row] = []
+        tiers_dict[stype][row].append(s)
+        row_counts[row] = row_counts.get(row, 0) + 1
+
+    # Filter out empty tiers
+    active_tiers = {k: v for k, v in tiers_dict.items() if v}
+
+    # Calculate row variation metrics
+    unique_row_counts = set(row_counts.values())
+    is_varying = len(unique_row_counts) > 1
+
+    # Determine next available row letter
+    existing_letters = set(row_counts.keys())
+    next_row_letter = 'A'
+    for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+        if c not in existing_letters:
+            next_row_letter = c
+            break
+
+    balcony_count = sum(1 for s in seats if s.get('seat_type') == 'Balcony')
+    premium_count = sum(1 for s in seats if s.get('seat_type') == 'Premium')
+    regular_count = sum(1 for s in seats if s.get('seat_type') == 'Regular')
+
+    return render_template(
+        'admin/seats.html',
+        screen=screen,
+        seats=seats,
+        tiers_dict=active_tiers,
+        row_counts=row_counts,
+        is_varying=is_varying,
+        next_row_letter=next_row_letter,
+        balcony_count=balcony_count,
+        premium_count=premium_count,
+        regular_count=regular_count,
+        total_seats=len(seats)
+    )
+
+@admin_bp.route('/seats/<int:screen_id>/apply-profile', methods=['POST'])
+@admin_required
+def apply_seat_profile(screen_id):
+    profile = request.form.get('profile', 'varying_cinematic')
+    
+    # Check if any bookings exist for shows on this screen
+    booked = query_one("""
+        SELECT COUNT(*) as c 
+        FROM BOOKING_SEATS bs
+        JOIN SEATS s ON bs.seat_id = s.seat_id
+        WHERE s.screen_id = :sid
+    """, {'sid': screen_id})
+    
+    if booked and booked['c'] > 0:
+        flash(f"Cannot completely regenerate seat plan: {booked['c']} seats on this screen are associated with confirmed ticket bookings.", "warning")
+        return redirect(url_for('admin.manage_seats', screen_id=screen_id))
+
+    execute("DELETE FROM SEATS WHERE screen_id = :sid", {'sid': screen_id})
+    new_count = auto_generate_screen_seats(screen_id, layout_preset=profile)
+    execute("UPDATE SCREENS SET total_seats = :cnt WHERE screen_id = :sid", {'cnt': new_count, 'sid': screen_id})
+
+    flash(f"Realistic non-grid seating profile '{profile}' applied successfully ({new_count} seats with Balcony & varying rows)!", "success")
+    return redirect(url_for('admin.manage_seats', screen_id=screen_id))
+
+@admin_bp.route('/seats/<int:screen_id>/add-row', methods=['POST'])
+@admin_required
+def add_screen_row(screen_id):
+    row_char = request.form.get('row_letter', '').upper().strip()
+    seat_type = request.form.get('seat_type', 'Regular')
+    count_str = request.form.get('seat_count', '10')
+
+    if not row_char or len(row_char) != 1 or not row_char.isalpha():
+        flash("Please provide a single valid letter (A-Z) for the row.", "danger")
+        return redirect(url_for('admin.manage_seats', screen_id=screen_id))
+
+    try:
+        cnt = max(1, min(30, int(count_str)))
+    except ValueError:
+        cnt = 10
+
+    # Check if row already exists
+    existing = query_one("SELECT seat_id FROM SEATS WHERE screen_id = :sid AND seat_number LIKE :pat", {'sid': screen_id, 'pat': f"{row_char}%"})
+    if existing:
+        flash(f"Row {row_char} already exists on this screen. Use '+ Add Seat' to expand row capacity.", "warning")
+        return redirect(url_for('admin.manage_seats', screen_id=screen_id))
+
+    for i in range(1, cnt + 1):
+        execute("""
+            INSERT INTO SEATS (screen_id, seat_number, seat_type, status)
+            VALUES (:sid, :num, :type, 'ACTIVE')
+        """, {'sid': screen_id, 'num': f"{row_char}{i}", 'type': seat_type})
+
+    # Update screen capacity
+    cur_count = query_one("SELECT COUNT(*) as c FROM SEATS WHERE screen_id = :sid", {'sid': screen_id})
+    execute("UPDATE SCREENS SET total_seats = :cnt WHERE screen_id = :sid", {'cnt': cur_count['c'], 'sid': screen_id})
+
+    flash(f"Row {row_char} added with {cnt} {seat_type} seats successfully! Auditorium rows now vary in length.", "success")
+    return redirect(url_for('admin.manage_seats', screen_id=screen_id))
+
+@admin_bp.route('/seats/<int:screen_id>/add-seat-to-row', methods=['POST'])
+@admin_required
+def add_seat_to_row(screen_id):
+    row_char = request.form.get('row_letter', '').upper().strip()
+    seat_type = request.form.get('seat_type', 'Regular')
+
+    if not row_char:
+        flash("Row letter required.", "danger")
+        return redirect(url_for('admin.manage_seats', screen_id=screen_id))
+
+    # Find maximum seat number in this row
+    row_seats = query_all("SELECT seat_number, seat_type FROM SEATS WHERE screen_id = :sid AND seat_number LIKE :pat", {'sid': screen_id, 'pat': f"{row_char}%"})
+    max_num = 0
+    inferred_type = seat_type
+    for s in row_seats:
+        digits = ''.join(filter(str.isdigit, s['seat_number']))
+        if digits:
+            max_num = max(max_num, int(digits))
+        inferred_type = s['seat_type']
+
+    next_num = max_num + 1
+    new_seat_num = f"{row_char}{next_num}"
+
+    execute("""
+        INSERT INTO SEATS (screen_id, seat_number, seat_type, status)
+        VALUES (:sid, :num, :type, 'ACTIVE')
+    """, {'sid': screen_id, 'num': new_seat_num, 'type': inferred_type})
+
+    cur_count = query_one("SELECT COUNT(*) as c FROM SEATS WHERE screen_id = :sid", {'sid': screen_id})
+    execute("UPDATE SCREENS SET total_seats = :cnt WHERE screen_id = :sid", {'cnt': cur_count['c'], 'sid': screen_id})
+
+    flash(f"Seat {new_seat_num} added to Row {row_char}! (Row {row_char} capacity: {next_num} seats).", "success")
+    return redirect(url_for('admin.manage_seats', screen_id=screen_id))
+
+@admin_bp.route('/seats/<int:screen_id>/remove-seat-from-row', methods=['POST'])
+@admin_required
+def remove_seat_from_row(screen_id):
+    row_char = request.form.get('row_letter', '').upper().strip()
+
+    row_seats = query_all("SELECT seat_id, seat_number FROM SEATS WHERE screen_id = :sid AND seat_number LIKE :pat", {'sid': screen_id, 'pat': f"{row_char}%"})
+    if not row_seats:
+        flash(f"No seats found in Row {row_char}.", "warning")
+        return redirect(url_for('admin.manage_seats', screen_id=screen_id))
+
+    # Find highest number seat
+    highest_seat = None
+    max_num = -1
+    for s in row_seats:
+        digits = ''.join(filter(str.isdigit, s['seat_number']))
+        val = int(digits) if digits else 0
+        if val > max_num:
+            max_num = val
+            highest_seat = s
+
+    if highest_seat:
+        # Check booking
+        booked = query_one("SELECT booking_seat_id FROM BOOKING_SEATS WHERE seat_id = :sid", {'sid': highest_seat['seat_id']})
+        if booked:
+            flash(f"Seat {highest_seat['seat_number']} cannot be removed: already reserved in a customer booking.", "danger")
+            return redirect(url_for('admin.manage_seats', screen_id=screen_id))
+
+        execute("DELETE FROM SEATS WHERE seat_id = :sid", {'sid': highest_seat['seat_id']})
+        cur_count = query_one("SELECT COUNT(*) as c FROM SEATS WHERE screen_id = :sid", {'sid': screen_id})
+        execute("UPDATE SCREENS SET total_seats = :cnt WHERE screen_id = :sid", {'cnt': cur_count['c'], 'sid': screen_id})
+        flash(f"Seat {highest_seat['seat_number']} removed from Row {row_char}.", "info")
+
+    return redirect(url_for('admin.manage_seats', screen_id=screen_id))
+
+@admin_bp.route('/seats/<int:screen_id>/change-row-tier', methods=['POST'])
+@admin_required
+def change_row_tier(screen_id):
+    row_char = request.form.get('row_letter', '').upper().strip()
+    new_tier = request.form.get('new_tier', 'Regular')
+
+    if row_char and new_tier in ('Balcony', 'Premium', 'Regular'):
+        execute("UPDATE SEATS SET seat_type = :tier WHERE screen_id = :sid AND seat_number LIKE :pat", {
+            'tier': new_tier, 'sid': screen_id, 'pat': f"{row_char}%"
+        })
+        flash(f"Row {row_char} converted to '{new_tier}' tier.", "success")
+
+    return redirect(url_for('admin.manage_seats', screen_id=screen_id))
+
+@admin_bp.route('/seats/<int:screen_id>/toggle-seat-status/<int:seat_id>', methods=['POST'])
+@admin_required
+def toggle_seat_status(screen_id, seat_id):
+    seat = query_one("SELECT seat_id, status, seat_number FROM SEATS WHERE seat_id = :sid AND screen_id = :scid", {'sid': seat_id, 'scid': screen_id})
+    if seat:
+        new_status = 'MAINTENANCE' if seat['status'] == 'ACTIVE' else 'ACTIVE'
+        execute("UPDATE SEATS SET status = :st WHERE seat_id = :sid", {'st': new_status, 'sid': seat_id})
+        flash(f"Seat {seat['seat_number']} status changed to {new_status}.", "info")
+    return redirect(url_for('admin.manage_seats', screen_id=screen_id))
+
+@admin_bp.route('/seats/<int:screen_id>/delete-seat/<int:seat_id>', methods=['POST'])
+@admin_required
+def delete_seat(screen_id, seat_id):
+    booked = query_one("SELECT booking_seat_id FROM BOOKING_SEATS WHERE seat_id = :sid", {'sid': seat_id})
+    if booked:
+        flash("Cannot delete a seat with active bookings.", "danger")
+        return redirect(url_for('admin.manage_seats', screen_id=screen_id))
+
+    execute("DELETE FROM SEATS WHERE seat_id = :sid AND screen_id = :scid", {'sid': seat_id, 'scid': screen_id})
+    cur_count = query_one("SELECT COUNT(*) as c FROM SEATS WHERE screen_id = :sid", {'sid': screen_id})
+    execute("UPDATE SCREENS SET total_seats = :cnt WHERE screen_id = :sid", {'cnt': cur_count['c'], 'sid': screen_id})
+    flash("Seat removed successfully.", "info")
+    return redirect(url_for('admin.manage_seats', screen_id=screen_id))
 
 # ---------------------------------------------------------------------
 # SHOW MANAGEMENT

@@ -3,6 +3,16 @@
 
 {% block content %}
 <div class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem;">
+  <!-- Page Sequence Navigation Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; padding: 0.75rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);">
+    <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+      <span>←</span> <span>Previous: Back to Movie Details</span>
+    </a>
+    <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; border-color: rgba(245, 158, 11, 0.45); color: var(--primary); font-weight: 700;">
+      <span>📍</span> <span>Next: Find Theatres Near You</span> <span>→</span>
+    </a>
+  </div>
+
   
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
     <div>
@@ -10,8 +20,18 @@
       <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin-top: 0.4rem;">{{ movie.title }} — Sentiment Analytics</h1>
       <p style="color: var(--text-muted); font-size: 0.95rem;">Automated machine learning opinion mining across all viewer submissions</p>
     </div>
-    <div style="display: flex; gap: 0.75rem;">
-      <a href="{{ url_for('review.submit_review', movie_id=movie.movie_id) }}" class="btn btn-primary">⭐ Write Review</a>
+    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+      {% if is_admin %}
+        <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.35); padding: 0.5rem 0.85rem; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 600;">
+          🛡️ Admin Review Disabled
+        </span>
+      {% elif can_review %}
+        <a href="{{ url_for('review.submit_review', movie_id=movie.movie_id) }}" class="btn btn-primary">⭐ Write Verified Review</a>
+      {% elif current_user %}
+        <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}#showtimes-section" class="btn btn-secondary" title="Book tickets to review">🎟️ Book Tickets to Review</a>
+      {% else %}
+        <a href="{{ url_for('auth.login', next=request.path) }}" class="btn btn-secondary">🔒 Sign in to Review</a>
+      {% endif %}
       <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-secondary">&larr; Back to Movie</a>
     </div>
   </div>
@@ -116,7 +136,15 @@
     {% else %}
     <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
       <p style="font-size: 1rem; margin-bottom: 1rem;">No reviews currently available for this movie.</p>
-      <a href="{{ url_for('review.submit_review', movie_id=movie.movie_id) }}" class="btn btn-primary">Be the first to review!</a>
+      {% if is_admin %}
+        <span style="font-size: 0.85rem; color: var(--text-muted);">Admin review creation is disabled.</span>
+      {% elif can_review %}
+        <a href="{{ url_for('review.submit_review', movie_id=movie.movie_id) }}" class="btn btn-primary">Be the first to review!</a>
+      {% elif current_user %}
+        <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}#showtimes-section" class="btn btn-secondary">Book tickets to be the first reviewer!</a>
+      {% else %}
+        <a href="{{ url_for('auth.login', next=request.path) }}" class="btn btn-secondary">Sign in to Review</a>
+      {% endif %}
     </div>
     {% endif %}
   </div>

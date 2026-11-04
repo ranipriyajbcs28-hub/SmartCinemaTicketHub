@@ -38,9 +38,16 @@
       </div>
     </div>
 
-    <div style="display: flex; justify-content: center; gap: 1rem;">
-      <a href="{{ url_for('booking.history') }}" class="btn btn-primary">View My Bookings</a>
-      <a href="{{ url_for('movie.index') }}" class="btn btn-secondary">Browse More Movies</a>
+        <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="{{ url_for('booking.history') }}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+        <span>←</span> <span>Previous: My Bookings</span>
+      </a>
+      <a href="{{ url_for('review.submit_review', movie_id=booking.movie_id) }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700;">
+        <span>✍️</span> <span>Next: Rate & Review Movie (AI Analysis)</span> <span>→</span>
+      </a>
+      <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--primary); font-weight: 700;">
+        <span>📍</span> <span>Next: Browse Theatres Near You</span> <span>→</span>
+      </a>
     </div>
   </div>
 

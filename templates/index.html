@@ -4,9 +4,24 @@
 {% block content %}
 <div class="container" style="max-width: 1280px; margin: 0 auto; padding: 0 1.5rem;">
 
+  <!-- Page Sequence Navigation Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; padding: 0.75rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);">
+    <a href="{{ url_for('movie.welcome') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+      <span>←</span> <span>Previous: Welcome Page</span>
+    </a>
+    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+      <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; border-color: rgba(245, 158, 11, 0.45); color: var(--primary); font-weight: 700;">
+        <span>📍</span> <span>Next: Browse Theatres Near You</span> <span>→</span>
+      </a>
+      <a href="{{ url_for('movie.catalog') }}" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+        <span>🎬</span> <span>Next: Full Movie Catalog</span> <span>→</span>
+      </a>
+    </div>
+  </div>
+
   <!-- Hero Section -->
   {% if hero_movie %}
-  <section class="hero-banner" style="position: relative; border-radius: var(--radius-xl); overflow: hidden; margin-top: 1.5rem; margin-bottom: 3rem; background: linear-gradient(180deg, rgba(15,23,42,0.6) 0%, rgba(11,15,25,0.95) 100%), url('{{ hero_movie.poster or url_for("static", filename="images/default_banner.jpg") }}') center/cover no-repeat; padding: 4rem 2.5rem; border: 1px solid var(--border); box-shadow: var(--shadow-lg);">
+  <section class="hero-banner" style="position: relative; border-radius: var(--radius-xl); overflow: hidden; margin-bottom: 3rem; background: linear-gradient(180deg, rgba(15,23,42,0.6) 0%, rgba(11,15,25,0.95) 100%), url('{{ hero_movie.poster or url_for("static", filename="images/default_banner.jpg") }}') center/cover no-repeat; padding: 4rem 2.5rem; border: 1px solid var(--border); box-shadow: var(--shadow-lg);">
     <div style="max-width: 650px;">
       <span class="badge" style="background: var(--primary); color: #000; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; margin-bottom: 1rem;">🔥 Featured Blockbuster</span>
       <h1 style="font-size: 2.8rem; font-weight: 800; line-height: 1.15; margin-bottom: 1rem; color: #fff;">{{ hero_movie.title }}</h1>
@@ -21,8 +36,11 @@
       </div>
       <p style="color: var(--text-secondary); margin-bottom: 1.75rem; font-size: 1.05rem; line-height: 1.6;">{{ hero_movie.description[:200] }}...</p>
       <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-        <a href="{{ url_for('movie.details', movie_id=hero_movie.movie_id) }}" class="btn btn-primary" style="padding: 0.8rem 1.8rem; font-size: 1.05rem;">Book Tickets Now</a>
-        <a href="{{ url_for('review.sentiment_analysis', movie_id=hero_movie.movie_id) }}" class="btn btn-secondary">AI Sentiment & Reviews</a>
+        <a href="{{ url_for('movie.details', movie_id=hero_movie.movie_id) }}" class="btn btn-primary" style="padding: 0.8rem 1.8rem; font-size: 1.05rem;">Book Tickets Now &rarr;</a>
+        {% if hero_movie.trailer %}
+          <a href="{{ hero_movie.trailer }}" target="_blank" class="btn btn-secondary" style="background: rgba(225, 29, 72, 0.15); border-color: rgba(225, 29, 72, 0.4); color: #fb7185;">▶ Watch Trailer</a>
+        {% endif %}
+        <a href="{{ url_for('review.sentiment_analysis', movie_id=hero_movie.movie_id) }}" class="btn btn-secondary">AI Sentiment & Reviews &rarr;</a>
       </div>
     </div>
   </section>
@@ -52,9 +70,12 @@
         <div style="padding: 1.25rem; display: flex; flex-direction: column; flex: 1; justify-content: space-between;">
           <div>
             <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-primary);">{{ movie.title }}</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">{{ movie.genre }} &bull; {{ movie.language }}</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">{{ movie.genre }} &bull; {{ movie.duration }} min</p>
           </div>
-          <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm" style="width: 100%;">View Shows</a>
+          <div style="display: flex; gap: 0.4rem;">
+            <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm" style="flex: 1;">Book Tickets &rarr;</a>
+            <a href="{{ url_for('review.sentiment_analysis', movie_id=movie.movie_id) }}" class="btn btn-secondary btn-sm" title="AI Review Analysis">📊</a>
+          </div>
         </div>
       </div>
       {% endfor %}
@@ -62,14 +83,18 @@
   </section>
   {% endif %}
 
-  <!-- Now Showing Movies -->
+  <!-- Now Showing Section -->
   <section style="margin-bottom: 3.5rem;">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-      <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary);">🎬 Now Showing</h2>
-      <a href="{{ url_for('movie.catalog', status='running') }}" style="color: var(--primary); text-decoration: none; font-size: 0.95rem; font-weight: 600;">View All &rarr;</a>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+      <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary);">🎬 Now Showing in Theatres</h2>
+      <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <a href="{{ url_for('movie.browse_theatres') }}" style="color: var(--primary); text-decoration: none; font-size: 0.95rem; font-weight: 700;">📍 Theatres Near You &rarr;</a>
+        <a href="{{ url_for('movie.catalog') }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.95rem; font-weight: 600;">Full Catalog &rarr;</a>
+      </div>
     </div>
+    
     {% if running_movies %}
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.75rem;">
       {% for movie in running_movies %}
       <div class="movie-card" style="background: var(--bg-card); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column;">
         <div style="position: relative; height: 320px; background: var(--bg-subtle);">
@@ -83,8 +108,11 @@
             <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-primary);">{{ movie.title }}</h3>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">{{ movie.genre }} &bull; {{ movie.duration }} min</p>
           </div>
-          <div style="display: flex; gap: 0.5rem;">
-            <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm" style="flex: 1;">Book Tickets</a>
+          <div style="display: flex; gap: 0.4rem;">
+            <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-primary btn-sm" style="flex: 1;">Book Tickets &rarr;</a>
+            {% if movie.trailer %}
+              <a href="{{ movie.trailer }}" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.4rem 0.65rem; color: #fb7185; border-color: rgba(225, 29, 72, 0.35);" title="Watch Trailer">▶</a>
+            {% endif %}
             <a href="{{ url_for('review.sentiment_analysis', movie_id=movie.movie_id) }}" class="btn btn-secondary btn-sm" title="AI Review Analysis">📊</a>
           </div>
         </div>
@@ -101,7 +129,7 @@
   <section style="margin-bottom: 3.5rem;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
       <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary);">🚀 Coming Soon</h2>
-      <a href="{{ url_for('movie.catalog', status='upcoming') }}" style="color: var(--primary); text-decoration: none; font-size: 0.95rem; font-weight: 600;">View All &rarr;</a>
+      <a href="{{ url_for('movie.catalog', status='upcoming') }}" style="color: var(--primary); text-decoration: none; font-size: 0.95rem; font-weight: 600;">View All Upcoming &rarr;</a>
     </div>
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem;">
       {% for movie in upcoming_movies %}
@@ -117,13 +145,28 @@
             <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-primary);">{{ movie.title }}</h3>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">{{ movie.genre }} &bull; {{ movie.language }}</p>
           </div>
-          <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-secondary btn-sm" style="width: 100%;">View Info</a>
+          <a href="{{ url_for('movie.details', movie_id=movie.movie_id) }}" class="btn btn-secondary btn-sm" style="width: 100%;">View Info &rarr;</a>
         </div>
       </div>
       {% endfor %}
     </div>
   </section>
   {% endif %}
+
+  <!-- Bottom Page Sequence Navigation -->
+  <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; margin-bottom: 3rem; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 1rem;">
+    <a href="{{ url_for('movie.welcome') }}" class="btn btn-secondary">
+      &larr; Previous: Welcome Page
+    </a>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary" style="color: var(--primary); font-weight: 700;">
+        📍 Next: Browse Theatres Near Location &rarr;
+      </a>
+      <a href="{{ url_for('movie.catalog') }}" class="btn btn-primary" style="padding: 0.8rem 2rem;">
+        Next: Browse Full Movie Catalog &rarr;
+      </a>
+    </div>
+  </div>
 
 </div>
 {% endblock %}

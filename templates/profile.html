@@ -3,6 +3,21 @@
 
 {% block content %}
 <div class="container" style="max-width: 600px; margin: 3rem auto; padding: 0 1.5rem;">
+  <!-- Page Sequence Navigation Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; padding: 0.75rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);">
+    <a href="{{ url_for('movie.index') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+      <span>←</span> <span>Previous: Back to Home</span>
+    </a>
+    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+      <a href="{{ url_for('booking.history') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+        <span>🎟️</span> <span>Next: My Bookings</span> <span>→</span>
+      </a>
+      <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+        <span>📍</span> <span>Next: Theatres Near You</span> <span>→</span>
+      </a>
+    </div>
+  </div>
+
   <div style="background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); padding: 2.5rem; box-shadow: var(--shadow-lg);">
     
     <div style="text-align: center; margin-bottom: 2rem;">

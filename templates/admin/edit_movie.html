@@ -3,6 +3,16 @@
 
 {% block content %}
 <div class="container" style="max-width: 800px; margin: 2rem auto; padding: 0 1.5rem;">
+  <!-- Page Sequence Navigation Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; padding: 0.75rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);">
+    <a href="{{ url_for('admin.manage_movies') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+      <span>←</span> <span>Previous: Back to Movies</span>
+    </a>
+    <a href="{{ url_for('admin.manage_shows') }}" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+      <span>Next: Schedule Shows for Movie</span> <span>→</span>
+    </a>
+  </div>
+
   
   <div style="margin-bottom: 2rem;">
     <a href="{{ url_for('admin.manage_movies') }}" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">&larr; Back to Movies</a>

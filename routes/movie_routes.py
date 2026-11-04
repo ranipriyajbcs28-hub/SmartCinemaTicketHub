@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, session
+from flask import Blueprint, render_template, request, session, redirect, url_for, flash
 from database.db import query_all, query_one
 from services.recommendation_service import get_recommendations_for_user
 
@@ -132,6 +132,79 @@ def catalog():
         status_filter=status_filter
     )
 
+@movie_bp.route('/theatres')
+@movie_bp.route('/theatres/<path:loc_path>')
+def browse_theatres(loc_path=None):
+    """
+    Browse theatres available near the customer's selected location.
+    Shows auditoriums, screens, upper Balcony amenities, and current scheduled showtimes.
+    """
+    selected_loc = request.args.get('location') or loc_path or session.get('selected_location') or ''
+    if selected_loc.lower() in ('all', 'any', 'none'):
+        selected_loc = ''
+
+    if selected_loc:
+        session['selected_location'] = selected_loc
+
+    # Fetch all distinct locations for quick switcher pills
+    loc_rows = query_all("SELECT DISTINCT location FROM THEATRES ORDER BY location")
+    all_locations = [r['location'] for r in loc_rows if r.get('location')]
+
+    # Query theatres matching location
+    sql = """
+        SELECT t.theatre_id, t.theatre_name, t.location,
+               COUNT(DISTINCT sc.screen_id) as screen_count,
+               NVL(SUM(sc.total_seats), 0) as total_seats,
+               (SELECT COUNT(*) FROM SEATS s JOIN SCREENS sc2 ON s.screen_id = sc2.screen_id WHERE sc2.theatre_id = t.theatre_id AND s.seat_type = 'Balcony') as balcony_seats
+        FROM THEATRES t
+        LEFT JOIN SCREENS sc ON t.theatre_id = sc.theatre_id
+        WHERE (:loc IS NULL OR :loc = '' OR LOWER(t.location) LIKE :loc_pat)
+        GROUP BY t.theatre_id, t.theatre_name, t.location
+        ORDER BY t.theatre_name
+    """
+    theatres = query_all(sql, {
+        'loc': selected_loc,
+        'loc_pat': f"%{selected_loc.lower()}%"
+    })
+
+    # For each theatre, fetch active shows & playing movies
+    for t in theatres:
+        tid = t['theatre_id']
+        shows = query_all("""
+            SELECT s.show_id, s.show_date, s.show_time, s.ticket_price,
+                   TO_CHAR(s.show_date, 'Dy, DD Mon') as show_date_formatted,
+                   m.movie_id, m.title as movie_title, m.poster, m.genre, m.language, m.rating,
+                   sc.screen_name
+            FROM SHOWS s
+            JOIN MOVIES m ON s.movie_id = m.movie_id
+            JOIN SCREENS sc ON s.screen_id = sc.screen_id
+            WHERE sc.theatre_id = :tid AND s.show_date >= TRUNC(SYSDATE)
+            ORDER BY s.show_date ASC, s.show_time ASC
+            LIMIT 6
+        """, {'tid': tid})
+        t['shows'] = shows
+
+    return render_template(
+        'theatres.html',
+        theatres=theatres,
+        all_locations=all_locations,
+        selected_location=selected_loc
+    )
+
+@movie_bp.route('/set-location', methods=['POST'])
+def set_location():
+    """Customer location switcher form endpoint."""
+    loc = request.form.get('location', '').strip()
+    session['selected_location'] = loc
+    next_url = request.form.get('next')
+    if loc and loc.lower() != 'all':
+        flash(f"Location updated to: {loc}. Showing nearby theatres.", "info")
+        return redirect(next_url or url_for('movie.browse_theatres', location=loc))
+    else:
+        session.pop('selected_location', None)
+        flash("Viewing all cinema locations.", "info")
+        return redirect(next_url or url_for('movie.browse_theatres'))
+
 @movie_bp.route('/movie/<int:movie_id>')
 def details(movie_id):
     """Detailed movie page showing metadata, available shows grouped by theatre/date, and reviews summary."""
@@ -201,7 +274,23 @@ def details(movie_id):
             if lbl in sentiment_counts:
                 sentiment_counts[lbl] += 1
         avg_calc = sum([r['rating'] for r in reviews]) / total_reviews
-        avg_rating = round(avg_calc, 1)
+    # Check viewer booking verification & admin status
+    user_id = session.get('user_id')
+    user_role = session.get('role')
+    is_admin = (user_role == 'ADMIN')
+    has_watched = False
+
+    if user_id and not is_admin:
+        bcheck = query_one("""
+            SELECT b.booking_id 
+            FROM BOOKINGS b
+            JOIN SHOWS s ON b.show_id = s.show_id
+            WHERE b.user_id = :uid AND s.movie_id = :mid AND b.booking_status = 'CONFIRMED'
+        """, {'uid': user_id, 'mid': movie_id})
+        if bcheck:
+            has_watched = True
+
+    can_review = bool(has_watched and not is_admin)
 
     return render_template(
         'movie_details.html',
@@ -211,5 +300,8 @@ def details(movie_id):
         reviews=reviews,
         total_reviews=total_reviews,
         avg_rating=avg_rating,
-        sentiment_counts=sentiment_counts
+        sentiment_counts=sentiment_counts,
+        has_watched=has_watched,
+        is_admin=is_admin,
+        can_review=can_review
     )
