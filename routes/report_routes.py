@@ -4,7 +4,8 @@ from database.db import query_all, query_one
 
 report_bp = Blueprint('report', __name__, url_prefix='/admin')
 
-@report_bp.route('/reports')
+@report_bp.route('/reports', endpoint='analytics_reports')
+@report_bp.route('/reports/dashboard', endpoint='reports_dashboard')
 @admin_required
 def analytics_reports():
     """Generates dynamic analytical reports aggregated directly from transactional tables."""
