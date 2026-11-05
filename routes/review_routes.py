@@ -160,6 +160,7 @@ def sentiment_analysis(movie_id):
 
     # Dynamic Word Cloud Generation enriched with movie context
     wordcloud_b64 = generate_wordcloud_base64(reviews, movie_info=movie)
+    top_keywords = extract_top_keywords(reviews, movie_info=movie)
 
     # Determine review eligibility for current viewer
     user_id = session.get('user_id')

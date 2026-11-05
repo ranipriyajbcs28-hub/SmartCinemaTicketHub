@@ -2,6 +2,19 @@ from flask import Blueprint, render_template, request, session, redirect, url_fo
 from database.db import query_all, query_one
 from services.recommendation_service import get_recommendations_for_user
 
+PROJECT_DISTRICTS = ['Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Bengaluru', 'Hyderabad', 'Kochi']
+
+DISTRICT_METADATA = {
+    'Chennai': {'state': 'Tamil Nadu', 'tagline': 'Capital Cinema Hub & SPI Theatres'},
+    'Coimbatore': {'state': 'Tamil Nadu', 'tagline': 'Kongu Region — Mega Multiplexes & 4K Atmos'},
+    'Madurai': {'state': 'Tamil Nadu', 'tagline': 'Cultural Hub — INOX Vishaal & Priya Complexes'},
+    'Tiruchirappalli': {'state': 'Tamil Nadu', 'tagline': 'Rock City — LA Cinemas & Mega Star Multiplex'},
+    'Salem': {'state': 'Tamil Nadu', 'tagline': 'Steel City — ARRS Multiplex & Kailash Cine Dome'},
+    'Bengaluru': {'state': 'Karnataka', 'tagline': 'Silicon Hub — IMAX, Cinepolis & Grand Malls'},
+    'Hyderabad': {'state': 'Telangana', 'tagline': 'Prasads IMAX & AMB Superplexes'},
+    'Kochi': {'state': 'Kerala', 'tagline': 'Queen of Arabian Sea — PVR Lulu & Shenoys'}
+}
+
 movie_bp = Blueprint('movie', __name__)
 
 @movie_bp.route('/')
@@ -134,60 +147,97 @@ def catalog():
 
 @movie_bp.route('/theatres')
 @movie_bp.route('/theatres/<path:loc_path>')
+@movie_bp.route('/locations')
+@movie_bp.route('/locations/<path:loc_path>')
 def browse_theatres(loc_path=None):
     """
-    Browse theatres available near the customer's selected location.
-    Shows auditoriums, screens, upper Balcony amenities, and current scheduled showtimes.
+    Location-first cinema discovery.
+    When accessing locations, only locations (districts) are displayed.
+    When a location is selected, only the theatres located in that chosen location are shown.
     """
-    selected_loc = request.args.get('location') or loc_path or session.get('selected_location') or ''
-    if selected_loc.lower() in ('all', 'any', 'none'):
+    selected_loc = request.args.get('location') or loc_path or ''
+    selected_loc = selected_loc.strip()
+
+    if selected_loc.lower() in ('all', 'clear', 'reset', 'locations', 'none'):
         selected_loc = ''
+        session.pop('selected_location', None)
 
-    if selected_loc:
-        session['selected_location'] = selected_loc
-
-    # Fetch all distinct locations for quick switcher pills
-    loc_rows = query_all("SELECT DISTINCT location FROM THEATRES ORDER BY location")
-    all_locations = [r['location'] for r in loc_rows if r.get('location')]
-
-    # Query theatres matching location
-    sql = """
+    # Fetch all theatres in database
+    all_theatres_raw = query_all("""
         SELECT t.theatre_id, t.theatre_name, t.location,
                COUNT(DISTINCT sc.screen_id) as screen_count,
                NVL(SUM(sc.total_seats), 0) as total_seats,
                (SELECT COUNT(*) FROM SEATS s JOIN SCREENS sc2 ON s.screen_id = sc2.screen_id WHERE sc2.theatre_id = t.theatre_id AND s.seat_type = 'Balcony') as balcony_seats
         FROM THEATRES t
         LEFT JOIN SCREENS sc ON t.theatre_id = sc.theatre_id
-        WHERE (:loc IS NULL OR :loc = '' OR LOWER(t.location) LIKE :loc_pat)
         GROUP BY t.theatre_id, t.theatre_name, t.location
         ORDER BY t.theatre_name
-    """
-    theatres = query_all(sql, {
-        'loc': selected_loc,
-        'loc_pat': f"%{selected_loc.lower()}%"
-    })
+    """)
 
-    # For each theatre, fetch active shows & playing movies
-    for t in theatres:
-        tid = t['theatre_id']
-        shows = query_all("""
-            SELECT s.show_id, s.show_date, s.show_time, s.ticket_price,
-                   TO_CHAR(s.show_date, 'Dy, DD Mon') as show_date_formatted,
-                   m.movie_id, m.title as movie_title, m.poster, m.genre, m.language, m.rating,
-                   sc.screen_name
-            FROM SHOWS s
-            JOIN MOVIES m ON s.movie_id = m.movie_id
-            JOIN SCREENS sc ON s.screen_id = sc.screen_id
-            WHERE sc.theatre_id = :tid AND s.show_date >= TRUNC(SYSDATE)
-            ORDER BY s.show_date ASC, s.show_time ASC
-            LIMIT 6
-        """, {'tid': tid})
-        t['shows'] = shows
+    # Group theatres into project districts
+    grouped_by_district = {d: [] for d in PROJECT_DISTRICTS}
+    for t in all_theatres_raw:
+        loc = t['location']
+        matched = next((d for d in PROJECT_DISTRICTS if d.lower() in loc.lower()), 'Bengaluru')
+        grouped_by_district[matched].append(t)
+
+    # Prepare locations summary for the "Only Keep Locations" view
+    locations_summary = []
+    for d in PROJECT_DISTRICTS:
+        th_list = grouped_by_district[d]
+        meta = DISTRICT_METADATA.get(d, {'state': 'India', 'tagline': 'Multiplex Hub'})
+        locations_summary.append({
+            'name': d,
+            'state': meta['state'],
+            'tagline': meta['tagline'],
+            'theatre_count': len(th_list),
+            'screen_count': sum(t['screen_count'] for t in th_list),
+            'total_seats': sum(t['total_seats'] for t in th_list),
+            'balcony_seats': sum(t['balcony_seats'] for t in th_list),
+            'preview_theatres': [t['theatre_name'] for t in th_list]
+        })
+
+    # If NO location is chosen: theatres list remains empty so only locations are displayed!
+    theatres = []
+    if selected_loc:
+        session['selected_location'] = selected_loc
+        target = selected_loc.lower()
+        
+        # Match theatres in chosen location/district
+        for t in all_theatres_raw:
+            loc = t['location'].lower()
+            if target in loc or loc in target:
+                theatres.append(t)
+        
+        # If no direct match, check district bucket
+        if not theatres:
+            for d in PROJECT_DISTRICTS:
+                if d.lower() in target or target in d.lower():
+                    theatres = grouped_by_district[d]
+                    break
+
+        # Fetch active showtimes for the matching theatres
+        for t in theatres:
+            tid = t['theatre_id']
+            shows = query_all("""
+                SELECT s.show_id, s.show_date, s.show_time, s.ticket_price,
+                       TO_CHAR(s.show_date, 'Dy, DD Mon') as show_date_formatted,
+                       m.movie_id, m.title as movie_title, m.poster, m.genre, m.language, m.rating,
+                       sc.screen_name
+                FROM SHOWS s
+                JOIN MOVIES m ON s.movie_id = m.movie_id
+                JOIN SCREENS sc ON s.screen_id = sc.screen_id
+                WHERE sc.theatre_id = :tid AND s.show_date >= TRUNC(SYSDATE)
+                ORDER BY s.show_date ASC, s.show_time ASC
+                LIMIT 8
+            """, {'tid': tid})
+            t['shows'] = shows
 
     return render_template(
         'theatres.html',
         theatres=theatres,
-        all_locations=all_locations,
+        locations_summary=locations_summary,
+        project_districts=PROJECT_DISTRICTS,
         selected_location=selected_loc
     )
 
@@ -292,9 +342,8 @@ def details(movie_id):
 
     can_review = bool(has_watched and not is_admin)
 
-    # Fetch distinct locations for booking-time location picker
-    loc_rows = query_all("SELECT DISTINCT location FROM THEATRES ORDER BY location")
-    all_locations = [r['location'] for r in loc_rows if r.get('location')]
+    # Project locations/districts for booking-time location picker
+    all_locations = PROJECT_DISTRICTS
 
     # Location selection at booking time
     selected_loc = request.args.get('location')

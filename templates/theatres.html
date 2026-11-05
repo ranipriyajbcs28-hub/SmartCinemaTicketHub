@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Browse Theatres Near Your Location — Smart Cinema Ticket Hub{% endblock %}
+{% block title %}{% if selected_location %}Theatres in {{ selected_location }} — Smart Cinema Ticket Hub{% else %}Explore Cinema Locations & Districts — Smart Cinema Ticket Hub{% endif %}{% endblock %}
 
 {% block content %}
 <div class="container" style="max-width: 1280px; margin: 2rem auto; padding: 0 1.5rem;">
@@ -17,87 +17,194 @@
     </a>
   </div>
 
-  <!-- Header Banner & Location Filter Selector -->
-  <div style="background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); padding: 2rem; margin-bottom: 2.5rem; box-shadow: var(--shadow-sm);">
+  {% if not selected_location %}
+  <!-- ======================================================== -->
+  <!-- 1. LOCATION ACCESS VIEW: ONLY LOCATIONS (NO THEATRES)     -->
+  <!-- ======================================================== -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); padding: 2.25rem; margin-bottom: 2.5rem; box-shadow: var(--shadow-sm);">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
       <div>
         <div style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.85rem; background: rgba(245, 158, 11, 0.12); color: var(--primary); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 9999px; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem;">
-          Location-Based Cinema Discovery
+          Location-First Cinema Discovery
         </div>
         <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.35rem;">
-          Browse Theatres Near Your Location
+          Choose Your Location / District
         </h1>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">
-          Find theatres, multiplexes, upper balcony screens, and real-time showtimes available in your area.
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
+          Select your city or district below to explore cinema multiplexes, screens, and scheduled showtimes in that area.
         </p>
       </div>
 
       <!-- Quick Location Selector Form -->
       <form method="GET" action="{{ url_for('movie.browse_theatres') }}" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-        <select name="location" onchange="this.form.submit()" style="padding: 0.65rem 1rem; background: var(--bg-main); border: 1.5px solid var(--primary); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 700; font-size: 0.9rem;">
-          <option value="all">All Locations ({{ all_locations|length }} Areas)</option>
-          {% for loc in all_locations %}
-          <option value="{{ loc }}" {% if selected_location == loc %}selected{% endif %}>
-            {{ loc }}
-          </option>
+        <label for="locSelectTop" style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary);">Jump to Location:</label>
+        <select id="locSelectTop" name="location" onchange="this.form.submit()" style="padding: 0.65rem 1rem; background: var(--bg-main); border: 1.5px solid var(--primary); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 700; font-size: 0.9rem; cursor: pointer;">
+          <option value="">-- Choose District / Location --</option>
+          {% for d in project_districts %}
+          <option value="{{ d }}">{{ d }}</option>
           {% endfor %}
         </select>
-        {% if selected_location %}
-          <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" title="Clear location filter">Clear</a>
-        {% endif %}
       </form>
     </div>
 
-    <!-- Location Filter Pills -->
+    <!-- Quick Location Chips -->
     <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border);">
       <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.6rem;">
-        Popular Cinema Hubs:
+        Available Project Districts & Places:
       </span>
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <a href="{{ url_for('movie.browse_theatres') }}" class="btn {% if not selected_location %}btn-primary{% else %}btn-secondary{% endif %} btn-sm" style="font-size: 0.8rem;">
-          All Locations
+        {% for d in project_districts %}
+        <a href="{{ url_for('movie.browse_theatres', location=d) }}" 
+           class="btn btn-secondary btn-sm" 
+           style="font-size: 0.85rem; padding: 0.4rem 0.85rem; font-weight: 700;">
+          {{ d }}
         </a>
-        {% for loc in all_locations %}
-          {% set short_name = loc.split(',')[0] %}
-          <a href="{{ url_for('movie.browse_theatres', location=loc) }}" 
-             class="btn {% if selected_location == loc %}btn-primary{% else %}btn-secondary{% endif %} btn-sm" 
-             style="font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem;">
-            <span>{{ short_name }}</span>
-          </a>
         {% endfor %}
       </div>
     </div>
-
-    <!-- Active Filter Status Notification -->
-    <div style="margin-top: 1rem; font-size: 0.88rem; color: var(--text-secondary);">
-      {% if selected_location %}
-        Showing <strong>{{ theatres|length }}</strong> theatre(s) available in and around: <strong style="color: var(--primary);">{{ selected_location }}</strong>
-      {% else %}
-        Showing all <strong>{{ theatres|length }}</strong> cinema theatres across all locations.
-      {% endif %}
-    </div>
-
   </div>
 
-  <!-- Theatres Grid / List -->
+  <!-- Locations / Districts Grid (Only Locations Shown) -->
+  <div style="margin-bottom: 3.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+      <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 0;">
+        Available Cinema Places ({{ locations_summary|length }} Districts)
+      </h2>
+      <span style="font-size: 0.85rem; color: var(--text-muted);">
+        Click any district to view theatres located in that area
+      </span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1.5rem;">
+      {% for loc in locations_summary %}
+      <div style="background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); padding: 1.75rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-sm); transition: transform 0.2s, box-shadow 0.2s;">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+            <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin: 0;">
+              {{ loc.name }}
+            </h3>
+            <span style="font-size: 0.72rem; padding: 0.2rem 0.55rem; background: rgba(59, 130, 246, 0.12); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 9999px; font-weight: 700;">
+              {{ loc.state }}
+            </span>
+          </div>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 1rem 0;">
+            {{ loc.tagline }}
+          </p>
+
+          <!-- Badges & Stats -->
+          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+            <span style="font-size: 0.78rem; padding: 0.25rem 0.6rem; border-radius: 6px; background: rgba(245, 158, 11, 0.15); color: var(--primary); font-weight: 700;">
+              {{ loc.theatre_count }} Theatres Available
+            </span>
+            <span style="font-size: 0.78rem; padding: 0.25rem 0.6rem; border-radius: 6px; background: var(--bg-main); color: var(--text-secondary); border: 1px solid var(--border);">
+              {{ loc.screen_count }} Screens
+            </span>
+            <span style="font-size: 0.78rem; padding: 0.25rem 0.6rem; border-radius: 6px; background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 600;">
+              Balcony Seating
+            </span>
+          </div>
+
+        </div>
+
+        <a href="{{ url_for('movie.browse_theatres', location=loc.name) }}" 
+           class="btn btn-primary" 
+           style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.4rem; padding: 0.75rem; font-weight: 700;">
+          <span>View Theatres in {{ loc.name }}</span>
+          <span>&rarr;</span>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% else %}
+  <!-- ======================================================== -->
+  <!-- 2. THEATRES IN CHOSEN LOCATION VIEW                      -->
+  <!-- ======================================================== -->
+  <div style="background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); padding: 2rem; margin-bottom: 2.5rem; box-shadow: var(--shadow-sm);">
+    
+    <!-- Back to Locations Navigation -->
+    <div style="margin-bottom: 1rem;">
+      <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700;">
+        <span>←</span> <span>Back to All Locations / Districts</span>
+      </a>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.85rem; background: rgba(34, 197, 94, 0.12); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 9999px; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem;">
+          ✓ Showing Venues in {{ selected_location }}
+        </div>
+        <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.35rem;">
+          Theatres Located in {{ selected_location }}
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
+          Explore auditoriums, upper Balcony recliners, and live showtimes available exclusively in {{ selected_location }}.
+        </p>
+      </div>
+
+      <!-- Quick Switcher Dropdown -->
+      <form method="GET" action="{{ url_for('movie.browse_theatres') }}" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+        <label for="locSelectActive" style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary);">Change Location:</label>
+        <select id="locSelectActive" name="location" onchange="this.form.submit()" style="padding: 0.65rem 1rem; background: var(--bg-main); border: 1.5px solid var(--primary); border-radius: var(--radius-sm); color: var(--text-primary); font-weight: 700; font-size: 0.9rem; cursor: pointer;">
+          {% for d in project_districts %}
+          <option value="{{ d }}" {% if selected_location == d %}selected{% endif %}>{{ d }}</option>
+          {% endfor %}
+        </select>
+        <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" title="View all locations directory">All Locations</a>
+      </form>
+    </div>
+
+    <!-- Quick District Switcher Pills -->
+    <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border);">
+      <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.6rem;">
+        Switch District / Location:
+      </span>
+      <div style="display: flex; gap: 0.45rem; flex-wrap: wrap;">
+        <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-secondary btn-sm" style="font-size: 0.8rem;">
+          All Locations
+        </a>
+        {% for d in project_districts %}
+        <a href="{{ url_for('movie.browse_theatres', location=d) }}" 
+           class="btn {% if selected_location == d %}btn-primary{% else %}btn-secondary{% endif %} btn-sm" 
+           style="font-size: 0.8rem; font-weight: 700;">
+          {{ d }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Theatres List in this Location -->
   {% if theatres %}
+  <div style="margin-bottom: 1.25rem;">
+    <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.25rem 0;">
+      {{ theatres|length }} Theatre(s) Found in {{ selected_location }}
+    </h2>
+    <span style="font-size: 0.85rem; color: var(--text-muted);">
+      Scheduled daily showtimes, luxury recliners, and Balcony seating options below
+    </span>
+  </div>
+
   <div style="display: flex; flex-direction: column; gap: 1.75rem; margin-bottom: 2.5rem;">
     {% for t in theatres %}
-    <div class="theatre-card" style="background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); padding: 1.75rem; box-shadow: var(--shadow-sm); transition: transform 0.2s, box-shadow 0.2s;">
+    <div class="theatre-card" style="background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); padding: 1.75rem; box-shadow: var(--shadow-sm);">
       
       <!-- Theatre Header Info -->
       <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
         <div>
           <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
-            <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary); margin: 0;">
+            <h3 style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary); margin: 0;">
               {{ t.theatre_name }}
-            </h2>
+            </h3>
             <span style="font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 9999px; background: rgba(34, 197, 94, 0.12); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); font-weight: 700;">
               ✓ Open Today
             </span>
           </div>
           <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0; display: flex; align-items: center; gap: 0.4rem;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 4px; color: var(--primary);"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span>{{ t.location }}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 4px; color: var(--primary);"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <span>Location: {{ t.location }}</span>
           </p>
         </div>
 
@@ -131,7 +238,7 @@
                 {{ s.movie_title }}
               </h4>
               <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">
-                {{ s.genre }} &bull; ★ {{ s.rating }}
+                {{ s.show_date_formatted }} &bull; {{ s.screen_name }}
               </span>
               <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
                 <a href="{{ url_for('booking.seat_selection', show_id=s.show_id) }}" class="btn btn-primary btn-sm" style="padding: 0.25rem 0.65rem; font-size: 0.8rem; font-weight: 700;" title="Select Balcony & Premium Seats">
@@ -144,33 +251,37 @@
           {% endfor %}
         </div>
         {% else %}
-        <div style="padding: 1.25rem; background: var(--bg-main); border-radius: var(--radius-md); text-align: center; color: var(--text-muted); font-size: 0.9rem;">
-          No upcoming showtimes scheduled today at this theatre. Check back shortly!
-        </div>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">No scheduled shows listed at this specific moment.</p>
         {% endif %}
       </div>
 
     </div>
     {% endfor %}
   </div>
+
   {% else %}
-  <div style="text-align: center; padding: 4rem 1.5rem; background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); margin-bottom: 2.5rem;">
-    <div style="font-size: 2rem; margin-bottom: 1rem; color: var(--primary);"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
-    <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">No Theatres Found in this Location</h3>
+  <div style="text-align: center; padding: 3.5rem 1.5rem; background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border); margin-bottom: 2.5rem;">
+    <h3 style="font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
+      No Theatres Found in "{{ selected_location }}"
+    </h3>
     <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
-      We currently have cinema theatres across 14 Bangalore locations. Try selecting another area or browse all theatres.
+      We couldn't locate active theatres for this exact query. Choose from our verified project districts below.
     </p>
-    <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-primary">View All Available Theatres</a>
+    <a href="{{ url_for('movie.browse_theatres') }}" class="btn btn-primary">
+      Explore All Cinema Districts &rarr;
+    </a>
   </div>
   {% endif %}
 
+  {% endif %}
+
   <!-- Bottom Page Sequence Navigation -->
-  <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 1rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 1rem;">
     <a href="{{ url_for('movie.index') }}" class="btn btn-secondary">
       &larr; Previous: Back to Home
     </a>
     <a href="{{ url_for('movie.catalog') }}" class="btn btn-primary" style="padding: 0.8rem 2rem;">
-      Next: Browse Full Movie Catalog &rarr;
+      Next: Browse All Movies &rarr;
     </a>
   </div>
 
